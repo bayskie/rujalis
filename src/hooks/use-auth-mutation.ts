@@ -1,21 +1,31 @@
 import { loginFn, registerFn } from "@/api/auth";
+import { useGetUserQuery } from "@/hooks/use-user-query";
 import { useAuthStore } from "@/stores/auth-store";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
 export const useLoginMutation = () => {
-  const authStore = useAuthStore();
+  const { setUser, setToken } = useAuthStore();
+  const getUserQuery = useGetUserQuery();
   const navigate = useNavigate();
 
   return useMutation({
     mutationFn: loginFn,
 
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.meta.token) {
-        authStore.setToken(data.meta.token);
+        setToken(data.meta.token);
       }
 
-      navigate("/dashboard");
+      const { data: userData } = await getUserQuery.refetch();
+
+      if (userData?.data?.user) {
+        setUser(userData.data.user);
+      } else {
+        setUser(null);
+      }
+
+      navigate("/");
     },
   });
 };
