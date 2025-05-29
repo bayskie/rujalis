@@ -8,6 +8,8 @@ import Register from "@/pages/register";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import ProtectedRoute from "@/components/protected-route";
+import Map from "@/pages/map";
+import Regions from "@/pages/regions";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,12 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/register" element={<Register />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Home />} />
+            <Route path="/map" element={<Map />} />
+            <Route path="/road-segments" element={<Regions />} />
+            <Route path="/regions" element={<Regions />} />
+            <Route path="/road-materials" element={<Regions />} />
+            <Route path="/road-types" element={<Regions />} />
+            <Route path="/road-conditions" element={<Regions />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -13,11 +13,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronsUpDown, LogOut, CircleUser } from "lucide-react";
 import { createAvatar } from "@dicebear/core";
 import { botttsNeutral } from "@dicebear/collection";
-import { Link } from "react-router";
+import { DropdownDialogItem } from "@/components/ui/dropdown-dialog-item";
+import { Link, useNavigate } from "react-router";
+import { Button } from "@/components/ui/button";
 
 export default function AppSidebarUserDropdown() {
   const { isMobile } = useSidebar();
-  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const authStore = useAuthStore();
+  const user = authStore.user;
   const avatar = user
     ? createAvatar(botttsNeutral, { seed: user.email })?.toDataUri()
     : undefined;
@@ -67,12 +71,30 @@ export default function AppSidebarUserDropdown() {
               <span>Profil</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/logout">
-              <LogOut />
-              <span>Keluar</span>
-            </Link>
-          </DropdownMenuItem>
+
+          <DropdownDialogItem
+            title="Keluar"
+            trigger={
+              <>
+                <LogOut />
+                <span>Keluar</span>
+              </>
+            }
+            footer={
+              <div className="flex flex-row gap-2">
+                <Button variant="ghost">Batal</Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    authStore.logout();
+                    navigate("/login");
+                  }}
+                >
+                  Keluar
+                </Button>
+              </div>
+            }
+          />
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
