@@ -38,11 +38,13 @@ export const MapComponent = ({
   // TODO: Add road segments
   console.log(roadSegments);
 
-  const decodePolyline = (encoded: string): [number, number][] =>
-    decode(encoded);
+  const decodePolyline = (encoded: string): [number, number][] => {
+    return decode(encoded).map(([lng, lat]) => [lat, lng]);
+  };
 
-  const getLatLngsFromLayer = (layer: L.Polyline): [number, number][] =>
-    (layer.getLatLngs() as L.LatLng[]).map(({ lat, lng }) => [lng, lat]);
+  const getLatLngsFromLayer = (layer: L.Polyline): [number, number][] => {
+    return (layer.getLatLngs() as L.LatLng[]).map(({ lat, lng }) => [lat, lng]);
+  };
 
   const updatePolylineInfo = useCallback(
     (layer: L.Polyline) => {
@@ -141,8 +143,41 @@ export const MapComponent = ({
   ]);
 
   useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !roadSegments.length) return;
+
+    roadSegments.forEach((segment) => {
+      if (
+        !segment.paths ||
+        (activeRoadSegment && segment.id === activeRoadSegment.id)
+      )
+        return;
+
+      const decoded = decodePolyline(segment.paths);
+
+      // TODO: Add dynamic weight, custom color and dashArray by road segment type
+      L.polyline(decoded, {
+        color: "green",
+        weight: 3,
+        opacity: 1,
+        dashArray: "5, 5",
+        interactive: false,
+      }).addTo(map);
+    });
+  }, [activeRoadSegment, roadSegments]);
+
+  useEffect(() => {
     setupMap();
   }, [setupMap]);
+
+  useEffect(() => {
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div ref={mapContainerRef} className="z-10 h-full w-full rounded border" />
