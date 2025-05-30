@@ -10,6 +10,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import ProtectedRoute from "@/components/protected-route";
 import Map from "@/pages/map";
 import Regions from "@/pages/regions";
+import AddRoadSegment from "@/pages/add-road-segment";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/" element={<Home />} />
             <Route path="/map" element={<Map />} />
             <Route path="/road-segments" element={<Regions />} />
+            <Route path="/road-segments/add" element={<AddRoadSegment />} />
             <Route path="/regions" element={<Regions />} />
             <Route path="/road-materials" element={<Regions />} />
             <Route path="/road-types" element={<Regions />} />

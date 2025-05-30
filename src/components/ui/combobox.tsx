@@ -21,7 +21,7 @@ type Option = {
   label: string;
 };
 
-type ComboboxProps = {
+export type ComboboxProps = {
   options: Option[];
   placeholder?: string;
   emptyMessage?: string;
@@ -29,6 +29,7 @@ type ComboboxProps = {
   selectedValue: string;
   onChange: (value: string) => void;
   className?: string;
+  hasError?: boolean;
 };
 
 export function Combobox({
@@ -39,6 +40,7 @@ export function Combobox({
   selectedValue,
   onChange,
   className,
+  hasError,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
 
@@ -52,7 +54,12 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-[200px] justify-between", className)}
+          aria-invalid={hasError}
+          className={cn(
+            "w-[200px] justify-between",
+            "aria-invalid:border-destructive",
+            className,
+          )}
           disabled={disabled}
         >
           {selectedLabel || placeholder}

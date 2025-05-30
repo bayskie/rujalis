@@ -1,22 +1,22 @@
 import type { Meta } from "@/types/meta";
 
 export interface GetMasterRoadMaterialsResponse extends Meta {
-  ekisting: {
+  eksisting: {
     id: string;
-    value: string;
+    eksisting: string;
   }[];
 }
 
 export interface GetMasterRoadTypesResponse extends Meta {
-  ekisting: {
+  eksisting: {
     id: string;
-    value: string;
+    jenisjalan: string;
   }[];
 }
 
 export interface GetMasterRoadConditionsResponse extends Meta {
-  ekisting: {
+  eksisting: {
     id: string;
-    value: string;
+    kondisi: string;
   }[];
 }
