@@ -1,4 +1,8 @@
-import { addRoadSegment, editRoadSegmentById } from "@/api/road-segment";
+import {
+  addRoadSegment,
+  deleteRoadSegmentById,
+  editRoadSegmentById,
+} from "@/api/road-segment";
 import type { RoadSegmentFormRequest } from "@/types/road-segment";
 import { useMutation } from "@tanstack/react-query";
 
@@ -17,5 +21,11 @@ export const useEditRoadSegmentMutation = () => {
       segmentId: string;
       data: RoadSegmentFormRequest;
     }) => editRoadSegmentById(segmentId, data),
+  });
+};
+
+export const useDeleteRoadSegmentMutation = () => {
+  return useMutation({
+    mutationFn: (segmentId: string) => deleteRoadSegmentById(segmentId),
   });
 };

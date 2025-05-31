@@ -16,6 +16,31 @@ export interface RoadSegment {
   keterangan: string;
 }
 
+export interface EnrichedRoadSegment extends RoadSegment {
+  eksisting: string;
+  kondisi: string;
+  jenisjalan: string;
+  desa: string;
+  kecamatan_id: string;
+  kecamatan: string;
+  kabupaten_id: string;
+  kabupaten: string;
+  provinsi_id: string;
+  provinsi: string;
+}
+
+export interface RoadSegmentFilterOptions {
+  roadName?: string;
+  minLength?: number;
+  maxLength?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  materialId?: string[];
+  conditionId?: string[];
+  typeId?: string[];
+  villageId?: string;
+}
+
 export interface GetAllRoadSegmentsResponse extends Meta {
   ruasjalan: RoadSegment[];
 }
@@ -28,4 +53,8 @@ export interface RoadSegmentFormResponse extends Meta {
 
 export interface GetRoadSegmentByIdResponse extends Meta {
   ruasjalan: RoadSegment;
+}
+
+export interface GetEnrichedRoadSegmentByIdResponse extends Meta {
+  ruasjalan: EnrichedRoadSegment;
 }

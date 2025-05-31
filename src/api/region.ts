@@ -5,6 +5,7 @@ import type {
   GetAllSubdistrictsByRegencyIdResponse,
   GetAllVillagesBySubdistrictIdResponse,
   GetProvinceByIdResponse,
+  GetVillageByIdResponse,
 } from "@/types/region";
 
 export const getAllProvincesFn = (): Promise<GetAllProvincesResponse> =>
@@ -29,3 +30,8 @@ export const getAllVillagesBySubdistrictIdFn = (
   subdistrictId: string,
 ): Promise<GetAllVillagesBySubdistrictIdResponse> =>
   authClient.get(`/desa/${subdistrictId}`).then((res) => res.data);
+
+export const getVillageByIdFn = (
+  villageId: string,
+): Promise<GetVillageByIdResponse> =>
+  authClient.get(`/kecamatanbydesaid/${villageId}`).then((res) => res.data);

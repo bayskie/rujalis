@@ -2,7 +2,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
-import { useCallback, useEffect, useRef } from "react";
+import "@/assets/styles/tooltip.css";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { encode, decode } from "@mapbox/polyline";
 import {
   length as turfLength,
@@ -11,6 +12,8 @@ import {
 } from "@turf/turf";
 import { TILE_LAYERS } from "@/constants/tile-layers";
 import type { RoadSegment } from "@/types/road-segment";
+import { useEnrichedRoadSegmentByIdQuery } from "@/hooks/use-road-segment-query";
+import { RoadSegmentDialog } from "@/components/road-segment-dialog";
 
 interface MapComponentProps {
   zoom?: number;
@@ -34,6 +37,14 @@ export const MapComponent = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const polylineRef = useRef<L.Polyline | null>(null);
+
+  const [clickedRoadSegmentId, setClickedRoadSegmentId] = useState<
+    string | null
+  >(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { data: clickedRoadSegment } = useEnrichedRoadSegmentByIdQuery(
+    clickedRoadSegmentId || "",
+  );
 
   // TODO: Add road segments
   console.log(roadSegments);
@@ -156,13 +167,32 @@ export const MapComponent = ({
       const decoded = decodePolyline(segment.paths);
 
       // TODO: Add dynamic weight, custom color and dashArray by road segment type
-      L.polyline(decoded, {
+      const polyline = L.polyline(decoded, {
         color: "green",
-        weight: 3,
+        weight: 10,
         opacity: 1,
-        dashArray: "5, 5",
-        interactive: false,
+        dashArray: "7, 20",
+        interactive: true,
       }).addTo(map);
+
+      polyline.bindTooltip(
+        `<div class="leaflet-tooltip-custom__content">
+          <strong class="leaflet-tooltip-custom__title">${segment.kode_ruas}</strong>
+          <p class="leaflet-tooltip-custom__subtitle">${segment.nama_ruas}</p>
+          <p class="leaflet-tooltip-custom__description">${segment.keterangan}</p>
+        </div>`,
+        {
+          permanent: false,
+          direction: "top",
+          sticky: true,
+          className: "leaflet-tooltip-custom",
+        },
+      );
+
+      polyline.on("click", () => {
+        setClickedRoadSegmentId(segment.id);
+        setIsDialogOpen(true);
+      });
     });
   }, [activeRoadSegment, roadSegments]);
 
@@ -180,6 +210,17 @@ export const MapComponent = ({
   }, []);
 
   return (
-    <div ref={mapContainerRef} className="z-10 h-full w-full rounded border" />
+    <>
+      <div
+        ref={mapContainerRef}
+        className="z-10 h-full w-full rounded border"
+      />
+
+      <RoadSegmentDialog
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        roadSegment={clickedRoadSegment?.ruasjalan}
+      />
+    </>
   );
 };

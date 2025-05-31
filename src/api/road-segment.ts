@@ -24,3 +24,6 @@ export const editRoadSegmentById = (
   data: RoadSegmentFormRequest,
 ): Promise<RoadSegmentFormResponse> =>
   authClient.put(`/ruasjalan/${roadSegmentId}`, data).then((res) => res.data);
+
+export const deleteRoadSegmentById = (roadSegmentId: string) =>
+  authClient.delete(`/ruasjalan/${roadSegmentId}`);

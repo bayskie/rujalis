@@ -4,6 +4,7 @@ import {
   getAllSubdistrictsByRegencyIdFn,
   getAllVillagesBySubdistrictIdFn,
   getProvinceByProvinceIdFn,
+  getVillageByIdFn,
 } from "@/api/region";
 import { useQuery } from "@tanstack/react-query";
 
@@ -47,6 +48,15 @@ export const useAllVillagesBySubdistrictIdQuery = (subdistrictId: string) => {
     queryKey: ["villages", subdistrictId],
     queryFn: () => getAllVillagesBySubdistrictIdFn(subdistrictId),
     enabled: !!subdistrictId,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+export const useVillageByIdQuery = (villageId: string) => {
+  return useQuery({
+    queryKey: ["village", villageId],
+    queryFn: () => getVillageByIdFn(villageId),
+    enabled: !!villageId,
     staleTime: 1000 * 60 * 10,
   });
 };

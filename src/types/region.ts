@@ -34,3 +34,22 @@ export interface GetAllVillagesBySubdistrictIdResponse extends Meta {
     value: string;
   }[];
 }
+
+export interface GetVillageByIdResponse extends Meta {
+  desa: {
+    id: string;
+    desa: string;
+  };
+  kecamatan: {
+    id: string;
+    kecamatan: string;
+  };
+  kabupaten: {
+    id: string;
+    kabupaten: string;
+  };
+  provinsi: {
+    id: string;
+    provinsi: string;
+  };
+}
