@@ -46,11 +46,8 @@ export const MapComponent = ({
     clickedRoadSegmentId || "",
   );
 
-  // TODO: Add road segments
-  console.log(roadSegments);
-
   const decodePolyline = (encoded: string): [number, number][] => {
-    return decode(encoded).map(([lng, lat]) => [lat, lng]);
+    return decode(encoded);
   };
 
   const getLatLngsFromLayer = (layer: L.Polyline): [number, number][] => {
@@ -103,10 +100,9 @@ export const MapComponent = ({
       const decoded = decodePolyline(activeRoadSegment.paths);
       if (decoded.length) {
         const [lng, lat] = turfCenter(lineString(decoded)).geometry.coordinates;
-        viewCenter = [lat, lng];
+        viewCenter = [lng, lat];
 
-        const latLngs = decoded.map(([lat, lng]) => L.latLng(lat, lng));
-        const polyline = L.polyline(latLngs, { color: "blue" }).addTo(map);
+        const polyline = L.polyline(decoded, { color: "blue" }).addTo(map);
         polylineRef.current = polyline;
 
         updatePolylineInfo(polyline);

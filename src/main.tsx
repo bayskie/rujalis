@@ -11,6 +11,9 @@ import ProtectedRoute from "@/components/protected-route";
 import Map from "@/pages/map";
 import Regions from "@/pages/regions";
 import AddRoadSegment from "@/pages/add-road-segment";
+import EditRoadSegment from "@/pages/edit-road-segment";
+import RoadSegments from "@/pages/road-segments";
+import { Toaster } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
@@ -22,17 +25,24 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/map" element={<Map />} />
-            <Route path="/road-segments" element={<Regions />} />
-            <Route path="/road-segments/add" element={<AddRoadSegment />} />
-            <Route path="/regions" element={<Regions />} />
-            <Route path="/road-materials" element={<Regions />} />
-            <Route path="/road-types" element={<Regions />} />
-            <Route path="/road-conditions" element={<Regions />} />
+            <Route path="/">
+              <Route index element={<Home />} />
+              <Route path="map" element={<Map />} />
+              <Route path="road-segments">
+                <Route index element={<RoadSegments />} />
+                <Route path="add" element={<AddRoadSegment />} />
+                <Route path=":segmentId/edit" element={<EditRoadSegment />} />
+              </Route>
+              <Route path="regions" element={<Regions />} />
+              <Route path="road-materials" element={<Regions />} />
+              <Route path="road-types" element={<Regions />} />
+              <Route path="road-conditions" element={<Regions />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
+
+      <Toaster position="top-right" theme="light" />
 
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

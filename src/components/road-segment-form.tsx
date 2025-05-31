@@ -38,7 +38,9 @@ import {
   useAddRoadSegmentMutation,
   useEditRoadSegmentMutation,
 } from "@/hooks/use-road-segment-mutation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 function useSelectOptions<T>(
   data: T[] | undefined,
@@ -102,7 +104,11 @@ function FormComboboxField<T extends FieldValues>({
 }
 
 interface RoadSegmentFormProps {
-  values?: Partial<RoadSegmentFormRequest>;
+  values?: Partial<RoadSegmentFormRequest> & {
+    kecamatan_id?: string;
+    kabupaten_id?: string;
+    provinsi_id?: string;
+  };
   formType?: "add" | "edit";
   roadSegmentId?: string;
 }
@@ -112,10 +118,18 @@ export const RoadSegmentForm = ({
   formType = "add",
   roadSegmentId,
 }: RoadSegmentFormProps) => {
-  const [selectedProvinceId, setSelectedProvinceId] = useState<string>("");
-  const [selectedRegencyId, setSelectedRegencyId] = useState<string>("");
-  const [selectedSubdistrictId, setSelectedSubdistrictId] =
-    useState<string>("");
+  const navigate = useNavigate();
+
+  const [selectedProvinceId, setSelectedProvinceId] = useState<string>(
+    values?.provinsi_id?.toString() || "",
+  );
+
+  const [selectedRegencyId, setSelectedRegencyId] = useState<string>(
+    values?.kabupaten_id?.toString() || "",
+  );
+  const [selectedSubdistrictId, setSelectedSubdistrictId] = useState<string>(
+    values?.kecamatan_id?.toString() || "",
+  );
 
   const allProvinces = useAllProvincesQuery();
   const allRegencies = useAllRegenciesByProvinceIdQuery(selectedProvinceId);
@@ -166,18 +180,35 @@ export const RoadSegmentForm = ({
   const form = useForm<RoadSegmentFormRequest>({
     resolver: zodResolver(roadSegmentFormSchema),
     defaultValues: {
-      paths: values?.paths || "",
-      kode_ruas: values?.kode_ruas || "",
-      nama_ruas: values?.nama_ruas || "",
-      keterangan: values?.keterangan || "",
-      panjang: values?.panjang || 0,
-      lebar: values?.lebar || 0,
-      desa_id: values?.desa_id || "",
-      eksisting_id: values?.eksisting_id || "",
-      kondisi_id: values?.kondisi_id || "",
-      jenisjalan_id: values?.jenisjalan_id || "",
+      paths: "",
+      kode_ruas: "",
+      nama_ruas: "",
+      keterangan: "",
+      panjang: 0,
+      lebar: 0,
+      desa_id: "",
+      eksisting_id: "",
+      kondisi_id: "",
+      jenisjalan_id: "",
     },
   });
+
+  useEffect(() => {
+    if (values) {
+      form.reset({
+        paths: values.paths || "",
+        kode_ruas: values.kode_ruas || "",
+        nama_ruas: values.nama_ruas || "",
+        keterangan: values.keterangan || "",
+        panjang: values.panjang ?? 0,
+        lebar: values.lebar ?? 0,
+        desa_id: values.desa_id?.toString() || "",
+        eksisting_id: values.eksisting_id?.toString() || "",
+        kondisi_id: values.kondisi_id?.toString() || "",
+        jenisjalan_id: values.jenisjalan_id?.toString() || "",
+      });
+    }
+  }, [values, form]);
 
   const { setValue } = form;
 
@@ -412,6 +443,7 @@ export const RoadSegmentForm = ({
           {(addRoadSegment.isPending || editRoadSegment.isPending) && (
             <Loader2 className="animate-spin" />
           )}
+          <Save />
           Simpan
         </Button>
       </form>
