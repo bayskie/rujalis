@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import "@/assets/styles/tooltip.css";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { encode, decode } from "@mapbox/polyline";
 import {
@@ -10,9 +11,9 @@ import {
   center as turfCenter,
   lineString,
 } from "@turf/turf";
+
 import { TILE_LAYERS } from "@/constants/tile-layers";
 import type { RoadSegment } from "@/types/road-segment";
-import { useEnrichedRoadSegmentByIdQuery } from "@/hooks/use-road-segment-query";
 import { RoadSegmentDialog } from "@/components/road-segment-dialog";
 
 interface MapComponentProps {
@@ -34,124 +35,137 @@ export const MapComponent = ({
   onEncodedChange,
   drawable = true,
 }: MapComponentProps) => {
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string>("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const polylineRef = useRef<L.Polyline | null>(null);
+  const editablePolylineRef = useRef<L.Polyline | null>(null);
+  const segmentLayerRefs = useRef<L.Layer[]>([]);
 
-  const [clickedRoadSegmentId, setClickedRoadSegmentId] = useState<
-    string | null
-  >(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: clickedRoadSegment } = useEnrichedRoadSegmentByIdQuery(
-    clickedRoadSegmentId || "",
-  );
+  const decodePolyline = (encoded: string): [number, number][] =>
+    decode(encoded);
 
-  const decodePolyline = (encoded: string): [number, number][] => {
-    return decode(encoded);
-  };
+  const extractLatLngs = (polyline: L.Polyline): [number, number][] =>
+    (polyline.getLatLngs() as L.LatLng[]).map(({ lat, lng }) => [lat, lng]);
 
-  const getLatLngsFromLayer = (layer: L.Polyline): [number, number][] => {
-    return (layer.getLatLngs() as L.LatLng[]).map(({ lat, lng }) => [lat, lng]);
-  };
+  const updatePolylineData = useCallback(
+    (polyline: L.Polyline) => {
+      const geojson = polyline.toGeoJSON();
+      const coordinates = extractLatLngs(polyline);
+      const length = turfLength(geojson, { units: "meters" });
 
-  const updatePolylineInfo = useCallback(
-    (layer: L.Polyline) => {
-      const geojson = layer.toGeoJSON();
-      const coords = getLatLngsFromLayer(layer);
-      const lengthMeters = turfLength(geojson, { units: "meters" });
-
-      onLengthChange?.(lengthMeters);
-      onEncodedChange?.(encode(coords));
+      onLengthChange?.(length);
+      onEncodedChange?.(encode(coordinates));
     },
     [onLengthChange, onEncodedChange],
   );
 
-  const attachPolylineEvents = useCallback(
+  const bindPolylineEvents = useCallback(
     (polyline: L.Polyline) => {
-      const map = mapRef.current;
-      polyline.on("pm:update", () => updatePolylineInfo(polyline));
-      polyline.on("pm:edit", () => updatePolylineInfo(polyline));
+      polyline.on("pm:update", () => updatePolylineData(polyline));
+      polyline.on("pm:edit", () => updatePolylineData(polyline));
       polyline.on("pm:remove", () => {
-        map?.removeLayer(polyline);
-        polylineRef.current = null;
-        onEncodedChange?.("");
+        mapRef.current?.removeLayer(polyline);
+        editablePolylineRef.current = null;
         onLengthChange?.(0);
+        onEncodedChange?.("");
       });
     },
-    [onEncodedChange, onLengthChange, updatePolylineInfo],
+    [updatePolylineData, onLengthChange, onEncodedChange],
   );
 
-  const setupMap = useCallback(() => {
+  const initializeMap = useCallback(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    const map = L.map(mapContainerRef.current, {
-      zoomControl: false,
-    });
-    mapRef.current = map;
+    const mapInstance = L.map(mapContainerRef.current, { zoomControl: false });
+    mapRef.current = mapInstance;
+    mapInstance.pm.setLang("id");
 
-    const tile = TILE_LAYERS[0];
-    L.tileLayer(tile.url, { attribution: tile.attribution }).addTo(map);
-
-    L.control.zoom({ position: "topright" }).addTo(map);
+    const baseTile = TILE_LAYERS[0];
+    L.tileLayer(baseTile.url, { attribution: baseTile.attribution }).addTo(
+      mapInstance,
+    );
+    L.control.zoom({ position: "topright" }).addTo(mapInstance);
 
     let viewCenter = center;
 
     if (activeRoadSegment) {
-      const decoded = decodePolyline(activeRoadSegment.paths);
-      if (decoded.length) {
-        const [lng, lat] = turfCenter(lineString(decoded)).geometry.coordinates;
+      const decodedPath = decodePolyline(activeRoadSegment.paths);
+      if (decodedPath.length) {
+        const [lng, lat] = turfCenter(lineString(decodedPath)).geometry
+          .coordinates;
         viewCenter = [lng, lat];
 
-        const polyline = L.polyline(decoded, { color: "blue" }).addTo(map);
-        polylineRef.current = polyline;
+        const polyline = L.polyline(decodedPath, { color: "blue" }).addTo(
+          mapInstance,
+        );
+        editablePolylineRef.current = polyline;
 
-        updatePolylineInfo(polyline);
-        attachPolylineEvents(polyline);
+        updatePolylineData(polyline);
+        bindPolylineEvents(polyline);
       }
     }
 
-    map.setView(viewCenter, zoom);
+    mapInstance.setView(viewCenter, zoom);
+    setIsMapReady(true);
 
-    map.pm.addControls({
+    mapInstance.pm.addControls({
       position: "topright",
       drawPolyline: drawable,
       editMode: drawable,
       removalMode: drawable,
       drawMarker: false,
-      drawCircleMarker: false,
       drawPolygon: false,
-      drawRectangle: false,
       drawCircle: false,
+      drawRectangle: false,
       drawText: false,
+      drawCircleMarker: false,
       dragMode: false,
       cutPolygon: false,
       rotateMode: false,
     });
 
     if (drawable) {
-      map.on("pm:create", (e) => {
-        if (polylineRef.current) return;
+      mapInstance.on("pm:drawstart", ({ workingLayer }) => {
+        workingLayer.on("pm:vertexadded", ({ workingLayer: layer }) => {
+          if (editablePolylineRef.current) {
+            mapInstance.removeLayer(editablePolylineRef.current);
+            editablePolylineRef.current = null;
+          }
+          updatePolylineData(layer as L.Polyline);
+        });
+      });
 
-        const layer = e.layer as L.Polyline;
-        map.addLayer(layer);
-        polylineRef.current = layer;
+      mapInstance.on("pm:create", ({ layer }) => {
+        const newPolyline = layer as L.Polyline;
+        editablePolylineRef.current = newPolyline;
+        mapInstance.addLayer(newPolyline);
 
-        updatePolylineInfo(layer);
-        attachPolylineEvents(layer);
+        updatePolylineData(newPolyline);
+        bindPolylineEvents(newPolyline);
       });
     }
   }, [
     center,
-    activeRoadSegment,
     zoom,
     drawable,
-    updatePolylineInfo,
-    attachPolylineEvents,
+    activeRoadSegment,
+    updatePolylineData,
+    bindPolylineEvents,
   ]);
 
   useEffect(() => {
+    initializeMap();
+  }, [initializeMap]);
+
+  useEffect(() => {
     const map = mapRef.current;
-    if (!map || !roadSegments.length) return;
+    if (!map || !isMapReady || !roadSegments.length) return;
+
+    segmentLayerRefs.current.forEach((layer) => map.removeLayer(layer));
+    segmentLayerRefs.current = [];
 
     roadSegments.forEach((segment) => {
       if (
@@ -160,12 +174,10 @@ export const MapComponent = ({
       )
         return;
 
-      const decoded = decodePolyline(segment.paths);
-
-      // TODO: Add dynamic weight, custom color and dashArray by road segment type
-      const polyline = L.polyline(decoded, {
+      const path = decodePolyline(segment.paths);
+      const polyline = L.polyline(path, {
         color: "green",
-        weight: 10,
+        weight: 4,
         opacity: 1,
         dashArray: "7, 20",
         interactive: true,
@@ -186,37 +198,32 @@ export const MapComponent = ({
       );
 
       polyline.on("click", () => {
-        setClickedRoadSegmentId(segment.id);
+        setSelectedSegmentId(segment.id);
         setIsDialogOpen(true);
       });
-    });
-  }, [activeRoadSegment, roadSegments]);
 
-  useEffect(() => {
-    setupMap();
-  }, [setupMap]);
+      segmentLayerRefs.current.push(polyline);
+    });
+  }, [roadSegments, activeRoadSegment, isMapReady]);
 
   useEffect(() => {
     return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
+      mapRef.current?.remove();
+      mapRef.current = null;
     };
   }, []);
 
   return (
-    <>
+    <div className="relative h-full w-full">
       <div
         ref={mapContainerRef}
         className="z-10 h-full w-full rounded border"
       />
-
       <RoadSegmentDialog
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
-        roadSegment={clickedRoadSegment?.ruasjalan}
+        roadSegmentId={selectedSegmentId}
       />
-    </>
+    </div>
   );
 };
