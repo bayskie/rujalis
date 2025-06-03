@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useForm,
   useController,
@@ -39,21 +39,21 @@ import {
   useEditRoadSegmentMutation,
 } from "@/hooks/use-road-segment-mutation";
 import { Loader2, Save } from "lucide-react";
-import { useNavigate } from "react-router";
-import { toast } from "sonner";
+import { useGenerateRoadSegmentCode } from "@/hooks/use-generate-road-segment-code";
 
-function useSelectOptions<T>(
+const useSelectOptions = <T,>(
   data: T[] | undefined,
   valueKey: keyof T,
   labelKey: keyof T,
-) {
-  return (
-    data?.map((item) => ({
-      value: String(item[valueKey]),
-      label: String(item[labelKey]),
-    })) || []
+) =>
+  useMemo(
+    () =>
+      data?.map((item) => ({
+        value: String(item[valueKey]),
+        label: String(item[labelKey]),
+      })) || [],
+    [data, valueKey, labelKey],
   );
-}
 
 type Option = { value: string; label: string };
 
@@ -79,14 +79,14 @@ function FormComboboxField<T extends FieldValues>({
       control={controllerProps.control}
       name={controllerProps.name}
       render={() => (
-        <FormItem className="flex-1">
+        <FormItem className="min-w-0 flex-1">
           <FormLabel className="gap-1">
             <span>{label}</span>
             <span className="text-destructive">*</span>
           </FormLabel>
           <FormControl>
             <Combobox
-              className="w-full"
+              className="w-full truncate"
               options={options}
               selectedValue={field.value ?? ""}
               onChange={field.onChange}
@@ -118,12 +118,9 @@ export const RoadSegmentForm = ({
   formType = "add",
   roadSegmentId,
 }: RoadSegmentFormProps) => {
-  const navigate = useNavigate();
-
   const [selectedProvinceId, setSelectedProvinceId] = useState<string>(
     values?.provinsi_id?.toString() || "",
   );
-
   const [selectedRegencyId, setSelectedRegencyId] = useState<string>(
     values?.kabupaten_id?.toString() || "",
   );
@@ -193,13 +190,18 @@ export const RoadSegmentForm = ({
     },
   });
 
+  const generatedRoadSegmentCode = useGenerateRoadSegmentCode();
+
+  const [hasInitialized, setHasInitialized] = useState(false);
+
   useEffect(() => {
-    if (values) {
+    if (!hasInitialized && values) {
       form.reset({
         paths: values.paths || "",
-        kode_ruas: values.kode_ruas || "",
-        nama_ruas: values.nama_ruas || "",
-        keterangan: values.keterangan || "",
+        kode_ruas: values.kode_ruas || generatedRoadSegmentCode || "",
+        nama_ruas: values.nama_ruas || "Nama Ruas " + generatedRoadSegmentCode,
+        keterangan:
+          values.keterangan || "Keterangan " + generatedRoadSegmentCode,
         panjang: values.panjang ?? 0,
         lebar: values.lebar ?? 0,
         desa_id: values.desa_id?.toString() || "",
@@ -207,18 +209,19 @@ export const RoadSegmentForm = ({
         kondisi_id: values.kondisi_id?.toString() || "",
         jenisjalan_id: values.jenisjalan_id?.toString() || "",
       });
+      setHasInitialized(true);
     }
-  }, [values, form]);
+  }, [form, values, generatedRoadSegmentCode, hasInitialized]);
 
   const { setValue } = form;
 
   useEffect(() => {
-    return setValue("paths", values?.paths || "");
-  }, [values?.paths, setValue]);
+    setValue("paths", values?.paths ?? "");
+  }, [setValue, values?.paths]);
 
   useEffect(() => {
-    return setValue("panjang", values?.panjang || 0);
-  }, [values?.panjang, setValue]);
+    setValue("panjang", values?.panjang ?? 0);
+  }, [setValue, values?.panjang]);
 
   const addRoadSegment = useAddRoadSegmentMutation();
   const editRoadSegment = useEditRoadSegmentMutation();
@@ -254,7 +257,7 @@ export const RoadSegmentForm = ({
                 <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} disabled />
               </FormControl>
               <FormMessage className="overflow-hidden text-ellipsis whitespace-nowrap" />
             </FormItem>
@@ -434,11 +437,7 @@ export const RoadSegmentForm = ({
 
         <Button
           type="submit"
-          disabled={
-            !form.formState.isValid ||
-            addRoadSegment.isPending ||
-            editRoadSegment.isPending
-          }
+          disabled={addRoadSegment.isPending || editRoadSegment.isPending}
         >
           {(addRoadSegment.isPending || editRoadSegment.isPending) && (
             <Loader2 className="animate-spin" />

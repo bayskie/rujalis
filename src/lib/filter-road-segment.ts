@@ -9,56 +9,56 @@ export function filterRoadSegments(
 
   return segments.filter((segment) => {
     if (
-      options.roadName &&
-      !segment.nama_ruas.toLowerCase().includes(options.roadName.toLowerCase())
+      options.road_name &&
+      !segment.nama_ruas.toLowerCase().includes(options.road_name.toLowerCase())
     ) {
       return false;
     }
 
     if (
-      options.minLength !== undefined &&
-      segment.panjang < options.minLength
+      options.min_length !== undefined &&
+      segment.panjang < options.min_length
     ) {
       return false;
     }
 
     if (
-      options.maxLength !== undefined &&
-      segment.panjang > options.maxLength
+      options.max_length !== undefined &&
+      segment.panjang > options.max_length
     ) {
       return false;
     }
 
-    if (options.minWidth !== undefined && segment.lebar < options.minWidth) {
+    if (options.min_width !== undefined && segment.lebar < options.min_width) {
       return false;
     }
 
-    if (options.maxWidth !== undefined && segment.lebar > options.maxWidth) {
-      return false;
-    }
-
-    if (
-      options.materialId?.length &&
-      !options.materialId.includes(segment.eksisting_id)
-    ) {
+    if (options.max_width !== undefined && segment.lebar > options.max_width) {
       return false;
     }
 
     if (
-      options.conditionId?.length &&
-      !options.conditionId.includes(segment.kondisi_id)
+      options.material_ids?.length &&
+      !options.material_ids.includes(segment.eksisting_id)
     ) {
       return false;
     }
 
     if (
-      options.typeId?.length &&
-      !options.typeId.includes(segment.jenisjalan_id)
+      options.condition_ids?.length &&
+      !options.condition_ids.includes(segment.kondisi_id)
     ) {
       return false;
     }
 
-    if (options.villageId && segment.desa_id !== options.villageId) {
+    if (
+      options.type_ids?.length &&
+      !options.type_ids.includes(segment.jenisjalan_id)
+    ) {
+      return false;
+    }
+
+    if (options.village_id && segment.desa_id !== options.village_id) {
       return false;
     }
 

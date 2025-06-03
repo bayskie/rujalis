@@ -30,15 +30,15 @@ export interface EnrichedRoadSegment extends RoadSegment {
 }
 
 export interface RoadSegmentFilterOptions {
-  roadName?: string;
-  minLength?: number;
-  maxLength?: number;
-  minWidth?: number;
-  maxWidth?: number;
-  materialId?: string[];
-  conditionId?: string[];
-  typeId?: string[];
-  villageId?: string;
+  road_name?: string;
+  min_length?: number;
+  max_length?: number;
+  min_width?: number;
+  max_width?: number;
+  material_ids?: string[];
+  condition_ids?: string[];
+  type_ids?: string[];
+  village_id?: string;
 }
 
 export interface GetAllRoadSegmentsResponse extends Meta {

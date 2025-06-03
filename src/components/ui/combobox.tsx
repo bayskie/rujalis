@@ -56,13 +56,15 @@ export function Combobox({
           aria-expanded={open}
           aria-invalid={hasError}
           className={cn(
-            "w-[200px] justify-between",
+            "flex w-[200px] justify-between",
             "aria-invalid:border-destructive",
             className,
           )}
           disabled={disabled}
         >
-          {selectedLabel || placeholder}
+          <p className="w-[180px] truncate text-left">
+            {selectedLabel || placeholder}
+          </p>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
