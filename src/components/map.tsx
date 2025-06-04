@@ -1,5 +1,6 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-polylinedecorator";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import "@/assets/styles/tooltip.css";
@@ -15,6 +16,8 @@ import {
 import { TILE_LAYERS } from "@/constants/tile-layers";
 import type { RoadSegment } from "@/types/road-segment";
 import { RoadSegmentDialog } from "@/components/road-segment-dialog";
+import { useSettingStore } from "@/stores/setting-store";
+import { createIconPattern, createLinePattern } from "@/lib/create-pattern";
 
 interface MapComponentProps {
   zoom?: number;
@@ -35,6 +38,9 @@ export const MapComponent = ({
   onEncodedChange,
   drawable = true,
 }: MapComponentProps) => {
+  const { roadMaterialStyle, roadConditionStyle, roadTypeStyle } =
+    useSettingStore();
+
   const [isMapReady, setIsMapReady] = useState(false);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -50,6 +56,7 @@ export const MapComponent = ({
   const extractLatLngs = (polyline: L.Polyline): [number, number][] =>
     (polyline.getLatLngs() as L.LatLng[]).map(({ lat, lng }) => [lat, lng]);
 
+  // Update polyline data such as length and encoded string when polyline is updated
   const updatePolylineData = useCallback(
     (polyline: L.Polyline) => {
       const geojson = polyline.toGeoJSON();
@@ -62,6 +69,7 @@ export const MapComponent = ({
     [onLengthChange, onEncodedChange],
   );
 
+  // Bind polyline events to update polyline data
   const bindPolylineEvents = useCallback(
     (polyline: L.Polyline) => {
       polyline.on("pm:update", () => updatePolylineData(polyline));
@@ -76,6 +84,7 @@ export const MapComponent = ({
     [updatePolylineData, onLengthChange, onEncodedChange],
   );
 
+  // Initialize the map
   const initializeMap = useCallback(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
@@ -156,10 +165,12 @@ export const MapComponent = ({
     bindPolylineEvents,
   ]);
 
+  // Initialize the map when the component mounts
   useEffect(() => {
     initializeMap();
   }, [initializeMap]);
 
+  // Update the map when road segments change or active road segment changes
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapReady || !roadSegments.length) return;
@@ -175,13 +186,32 @@ export const MapComponent = ({
         return;
 
       const path = decodePolyline(segment.paths);
+
+      const { icon, color } = roadConditionStyle[segment.kondisi_id];
+      const { pattern, weight } = roadTypeStyle[segment.jenisjalan_id];
+
       const polyline = L.polyline(path, {
-        color: "green",
-        weight: 4,
-        opacity: 1,
-        dashArray: "7, 20",
         interactive: true,
+        color: pattern === "solid" ? color : "white",
+        weight,
+        opacity: pattern === "solid" ? 1 : 0.01,
       }).addTo(map);
+
+      if (pattern !== "solid") {
+        const linePatterns = createLinePattern(pattern, color, weight);
+        const decorator = L.polylineDecorator(polyline, {
+          patterns: linePatterns,
+        }).addTo(map);
+        segmentLayerRefs.current.push(decorator);
+      }
+
+      const iconPatterns = createIconPattern(icon, color);
+      const decorator = L.polylineDecorator(polyline, {
+        patterns: iconPatterns,
+      }).addTo(map);
+
+      segmentLayerRefs.current.push(polyline);
+      segmentLayerRefs.current.push(decorator);
 
       polyline.bindTooltip(
         `<div class="leaflet-tooltip-custom__content">
@@ -201,11 +231,17 @@ export const MapComponent = ({
         setSelectedSegmentId(segment.id);
         setIsDialogOpen(true);
       });
-
-      segmentLayerRefs.current.push(polyline);
     });
-  }, [roadSegments, activeRoadSegment, isMapReady]);
+  }, [
+    roadSegments,
+    activeRoadSegment,
+    isMapReady,
+    roadMaterialStyle,
+    roadConditionStyle,
+    roadTypeStyle,
+  ]);
 
+  // Clean up the map when the component unmounts
   useEffect(() => {
     return () => {
       mapRef.current?.remove();

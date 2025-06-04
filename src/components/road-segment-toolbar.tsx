@@ -1,7 +1,6 @@
-// components/map/MapToolbar.tsx
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Search } from "lucide-react";
+import { Filter, Loader2, Plus, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
@@ -12,38 +11,45 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router";
 import { TILE_LAYERS } from "@/constants/tile-layers";
+import { useState } from "react";
+import { useSearchPlaceQuery } from "@/hooks/use-search-place-query";
 
-interface MapToolbarProps {
-  inputValue: string;
-  setInputValue: (val: string) => void;
-  isSearchPlacesPending: boolean;
-  onSearch: () => void;
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  activeTileLayerName: string;
-  onChangeTileLayer: (name: string) => void;
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { RoadSegmentFilterForm } from "@/components/road-segment-filter-form";
 
+interface RoadSegmentToolbarProps {
   showSearch?: boolean;
   showTileLayer?: boolean;
   showAddButton?: boolean;
 }
 
-export function MapToolbar({
-  inputValue,
-  setInputValue,
-  isSearchPlacesPending,
-  onSearch,
-  activeTileLayerName,
-  onChangeTileLayer,
+export const RoadSegmentToolbar = ({
   showSearch = true,
   showTileLayer = true,
   showAddButton = true,
-}: MapToolbarProps) {
+}: RoadSegmentToolbarProps) => {
   const tileLayers = TILE_LAYERS;
 
+  const [inputValue, setInputValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTileLayerName, setActiveTileLayerName] = useState(
+    tileLayers[0].name,
+  );
+  const { data: searchPlaces, isPending: isSearchPlacesPending } =
+    useSearchPlaceQuery(searchQuery);
+
+  const onSearch = () => {
+    setSearchQuery(inputValue);
+  };
+
   return (
-    <div className="absolute top-2 left-2 z-30 w-64 p-1">
-      <div className="flex flex-col gap-2 rounded border bg-white p-1 shadow-md">
+    <div className="absolute top-2 left-2 z-30 w-72 overflow-auto p-1">
+      <div className="flex flex-col gap-2 rounded-lg border bg-white p-2 shadow-md">
+        {/* Search Place */}
         {showSearch && (
           <div className="flex gap-2">
             <Input
@@ -53,11 +59,11 @@ export function MapToolbar({
               placeholder="Cari Tempat"
               disabled={isSearchPlacesPending}
             />
+
             <Button
-              size="icon"
-              variant="outline"
               onClick={onSearch}
-              disabled={isSearchPlacesPending}
+              size="icon"
+              disabled={isSearchPlacesPending || !inputValue}
             >
               {isSearchPlacesPending ? (
                 <Loader2 className="animate-spin" />
@@ -73,7 +79,7 @@ export function MapToolbar({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="w-full justify-start">
                 <span>Ganti Peta</span>
-                <Separator orientation="vertical" className="mx-2" />
+                <Separator orientation="vertical" />
                 <span className="truncate font-normal">
                   {activeTileLayerName}
                 </span>
@@ -82,7 +88,7 @@ export function MapToolbar({
             <DropdownMenuContent className="w-56">
               <DropdownMenuRadioGroup
                 value={activeTileLayerName}
-                onValueChange={onChangeTileLayer}
+                onValueChange={setActiveTileLayerName}
               >
                 {tileLayers.map((layer) => (
                   <DropdownMenuRadioItem key={layer.name} value={layer.name}>
@@ -94,14 +100,27 @@ export function MapToolbar({
           </DropdownMenu>
         )}
 
-        {showAddButton && (
-          <Button asChild>
-            <Link to="/road-segments/add">
-              <Plus /> Tambah Ruas Jalan
-            </Link>
-          </Button>
-        )}
+        {/* Filter */}
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="mb-2 w-full justify-between">
+              <h4 className="text-sm">Filter</h4>
+              <Filter />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <RoadSegmentFilterForm height="10rem" />
+          </CollapsibleContent>
+        </Collapsible>
       </div>
+
+      {showAddButton && (
+        <Button asChild className="mt-2 w-full">
+          <Link to="/road-segments/add">
+            <Plus /> Tambah Ruas Jalan
+          </Link>
+        </Button>
+      )}
     </div>
   );
-}
+};
