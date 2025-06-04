@@ -39,21 +39,21 @@ export function filterRoadSegments(
 
     if (
       options.material_ids?.length &&
-      !options.material_ids.includes(segment.eksisting_id)
+      !options.material_ids.includes(String(segment.eksisting_id))
     ) {
       return false;
     }
 
     if (
       options.condition_ids?.length &&
-      !options.condition_ids.includes(segment.kondisi_id)
+      !options.condition_ids.includes(String(segment.kondisi_id))
     ) {
       return false;
     }
 
     if (
       options.type_ids?.length &&
-      !options.type_ids.includes(segment.jenisjalan_id)
+      !options.type_ids.includes(String(segment.jenisjalan_id))
     ) {
       return false;
     }

@@ -3,13 +3,13 @@ import { DeleteRoadSegmentButton } from "@/components/delete-road-segment-button
 import { RoadSegmentDialog } from "@/components/road-segment-dialog";
 import { RoadSegmentFilterDrawer } from "@/components/road-segment-filter-drawer";
 import { Button } from "@/components/ui/button";
+import { useFilterMapper } from "@/hooks/use-filter-mapper";
 import { useAllRoadSegmentsQuery } from "@/hooks/use-road-segment-query";
 import DefaultLayout from "@/layout/default";
 import type { RoadSegment } from "@/types/road-segment";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, Pencil, Plus } from "lucide-react";
-import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link } from "react-router";
 
 const columns: ColumnDef<RoadSegment>[] = [
   {
@@ -64,26 +64,7 @@ const columns: ColumnDef<RoadSegment>[] = [
 ];
 
 export default function RoadSegments() {
-  const [searchParams] = useSearchParams();
-
-  const filter = useMemo(() => {
-    const getNumber = (key: string) => {
-      const val = searchParams.get(key);
-      return val ? Number(val) : undefined;
-    };
-
-    return {
-      road_name: searchParams.get("road_name") || undefined,
-      min_length: getNumber("min_length"),
-      max_length: getNumber("max_length"),
-      min_width: getNumber("min_width"),
-      max_width: getNumber("max_width"),
-      material_ids: searchParams.getAll("material_ids") || undefined,
-      condition_ids: searchParams.getAll("condition_ids") || undefined,
-      type_ids: searchParams.getAll("type_ids") || undefined,
-    };
-  }, [searchParams]);
-
+  const filter = useFilterMapper();
   const { data } = useAllRoadSegmentsQuery(filter);
 
   return (
