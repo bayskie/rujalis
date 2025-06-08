@@ -6,22 +6,21 @@ import {
 import { useAllRoadSegmentsQuery } from "@/hooks/use-road-segment-query";
 import { useSettingStore } from "@/stores/setting-store";
 import type { Analytic } from "@/types/analytic";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef } from "react";
-import { useGeminiGenerateContentMutation } from "@/hooks/use-generate-content-with-gemini";
+import { useQuery } from "@tanstack/react-query";
+import { useGenerateContentWithGeminiMutation } from "@/hooks/use-generate-content-with-gemini";
+import type { RoadSegment } from "@/types/road-segment";
 
 const buildDistribution = <
   T extends { id: string },
-  Segment extends { [key in Key]: string },
-  Key extends keyof Segment,
+  K extends keyof RoadSegment,
 >(
   masterData: T[],
-  segments: Segment[],
-  key: Key,
+  segments: RoadSegment[],
+  key: K,
   getName: (item: T) => string,
   getFill: (item: T) => string,
-) =>
-  masterData.map((item) => {
+) => {
+  return masterData.map((item) => {
     const count = segments.filter((segment) => segment[key] === item.id).length;
     return {
       name: getName(item),
@@ -29,118 +28,124 @@ const buildDistribution = <
       fill: getFill(item),
     };
   });
+};
+
+const calculateStatistics = (segments: RoadSegment[]) => {
+  const roadCount = segments.length;
+  const roadLengthTotal = segments.reduce((sum, r) => sum + r.panjang, 0);
+  const roadLengthAvg = roadCount > 0 ? roadLengthTotal / roadCount : 0;
+  const roadWidthTotal = segments.reduce((sum, r) => sum + r.lebar, 0);
+  const roadWidthAvg = roadCount > 0 ? roadWidthTotal / roadCount : 0;
+
+  return {
+    roadCount,
+    roadLengthTotal,
+    roadLengthAvg,
+    roadWidthTotal,
+    roadWidthAvg,
+  };
+};
+
+const buildPrompt = (
+  stats: ReturnType<typeof calculateStatistics>,
+  conditionDist: ReturnType<typeof buildDistribution>,
+  typeDist: ReturnType<typeof buildDistribution>,
+  materialDist: ReturnType<typeof buildDistribution>,
+) => {
+  return `
+Berikut adalah data analitik ruas jalan:
+
+- Jumlah ruas jalan: ${stats.roadCount}
+- Panjang total: ${stats.roadLengthTotal.toFixed(2)} m
+- Panjang rata-rata: ${stats.roadLengthAvg.toFixed(2)} m
+- Lebar total: ${stats.roadWidthTotal.toFixed(2)} m
+- Lebar rata-rata: ${stats.roadWidthAvg.toFixed(2)} m
+
+Distribusi kondisi jalan:
+${conditionDist.map((d) => `- ${d.name}: ${d.count}`).join("\n")}
+
+Distribusi jenis jalan:
+${typeDist.map((d) => `- ${d.name}: ${d.count}`).join("\n")}
+
+Distribusi material jalan:
+${materialDist.map((d) => `- ${d.name}: ${d.count}`).join("\n")}
+
+Buatkan ringkasan analisis dari data di atas dalam 1-2 kalimat berbahasa Indonesia.
+`;
+};
 
 export const useAnalyticQuery = () => {
-  const queryClient = useQueryClient();
-  const queryKey = useMemo(() => ["analytic"], []);
-  const hasGenerated = useRef(false);
-  const { mutateAsync: generateInsight } = useGeminiGenerateContentMutation();
-
   const { data: roadSegments } = useAllRoadSegmentsQuery();
   const { data: roadConditions } = useMasterRoadConditionsQuery();
   const { data: roadTypes } = useMasterRoadTypesQuery();
   const { data: roadMaterials } = useMasterRoadMaterialsQuery();
+  const { mutateAsync: generateInsight } =
+    useGenerateContentWithGeminiMutation();
   const setting = useSettingStore();
 
-  useEffect(() => {
-    const generate = async () => {
-      if (
-        !roadSegments ||
-        !roadConditions ||
-        !roadTypes ||
-        !roadMaterials ||
-        !setting ||
-        hasGenerated.current
-      )
-        return;
+  const segments = roadSegments?.ruasjalan ?? [];
+  const isDataReady =
+    segments.length > 0 &&
+    !!roadConditions?.eksisting &&
+    !!roadTypes?.eksisting &&
+    !!roadMaterials?.eksisting &&
+    !!setting;
 
-      hasGenerated.current = true;
+  return useQuery<Analytic>({
+    queryKey: ["analytic", segments.length],
+    queryFn: async () => {
+      if (!isDataReady) throw new Error("Road segments data not ready");
 
-      const ruas = roadSegments.ruasjalan;
-      const roadCount = ruas.length;
-      const roadLengthTotal = ruas.reduce((sum, r) => sum + r.panjang, 0);
-      const roadLengthAvg = roadLengthTotal / roadCount;
-      const roadWidthTotal = ruas.reduce((sum, r) => sum + r.lebar, 0);
-      const roadWidthAvg = roadWidthTotal / roadCount;
+      const stats = calculateStatistics(segments);
 
       const roadConditionDistribution = buildDistribution(
         roadConditions.eksisting,
-        ruas,
+        segments,
         "kondisi_id",
         (c) => c.kondisi,
-        (c) => setting.roadConditionStyle[c.id].color,
+        (c) => setting.roadConditionStyle[c.id]?.color ?? "#000000",
       );
 
       const roadTypeDistribution = buildDistribution(
         roadTypes.eksisting,
-        ruas,
+        segments,
         "jenisjalan_id",
         (t) => t.jenisjalan,
-        (t) => setting.roadTypeStyle[t.id].color,
+        (t) => setting.roadTypeStyle[t.id]?.color ?? "#000000",
       );
 
       const roadMaterialDistribution = buildDistribution(
         roadMaterials.eksisting,
-        ruas,
+        segments,
         "eksisting_id",
         (m) => m.eksisting,
-        (m) => setting.roadMaterialStyle[m.id].color,
+        (m) => setting.roadMaterialStyle[m.id]?.color ?? "#000000",
       );
 
-      const prompt = `
-Berikut adalah data analitik ruas jalan:
+      const prompt = buildPrompt(
+        stats,
+        roadConditionDistribution,
+        roadTypeDistribution,
+        roadMaterialDistribution,
+      );
 
-- Jumlah ruas jalan: ${roadCount}
-- Panjang total: ${roadLengthTotal.toFixed(2)} m
-- Panjang rata-rata: ${roadLengthAvg.toFixed(2)} m
-- Lebar total: ${roadWidthTotal.toFixed(2)} m
-- Lebar rata-rata: ${roadWidthAvg.toFixed(2)} m
+      let insight = "";
+      try {
+        const response = await generateInsight(prompt);
+        insight = response.candidates?.[0].content?.parts?.[0].text ?? "";
+      } catch {
+        insight = "Gagal menghasilkan ringkasan analisis.";
+      }
 
-Distribusi kondisi jalan:
-${roadConditionDistribution.map((d) => `- ${d.name}: ${d.count}`).join("\n")}
-
-Distribusi jenis jalan:
-${roadTypeDistribution.map((d) => `- ${d.name}: ${d.count}`).join("\n")}
-
-Distribusi material jalan:
-${roadMaterialDistribution.map((d) => `- ${d.name}: ${d.count}`).join("\n")}
-
-Buatkan ringkasan analisis dari data di atas dalam 1-2 kalimat berbahasa Indonesia.
-`;
-
-      const insight =
-        (await generateInsight(prompt)).candidates?.[0].content?.parts?.[0]
-          .text ?? "";
-
-      queryClient.setQueryData<Analytic>(queryKey, {
-        roadCount,
-        roadLengthTotal,
-        roadLengthAvg,
-        roadWidthTotal,
-        roadWidthAvg,
+      return {
+        ...stats,
         roadConditionDistribution,
         roadTypeDistribution,
         roadMaterialDistribution,
         insight,
-      });
-    };
-
-    generate();
-  }, [
-    queryClient,
-    queryKey,
-    roadSegments,
-    roadConditions,
-    roadTypes,
-    roadMaterials,
-    setting,
-    generateInsight,
-  ]);
-
-  return useQuery<Analytic>({
-    queryKey,
-    enabled: false,
-    staleTime: 1000 * 60 * 60,
-    gcTime: 1000 * 60 * 60 * 6,
+      };
+    },
+    enabled: isDataReady,
+    staleTime: 1000 * 60 * 10,
   });
 };

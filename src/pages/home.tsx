@@ -20,12 +20,11 @@ export default function Home() {
       <Card className="mb-4 w-full gap-2">
         <CardHeader>
           <CardTitle className="text-muted-foreground text-sm font-normal">
-            Ikhtisar{" "}
-            <Sparkles className="text-muted-foreground inline" size={16} />
+            Rujal AI <Sparkles className="inline" size={16} />
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="">{data?.insight}</p>
+          <p>{data?.insight}</p>
         </CardContent>
       </Card>
 
