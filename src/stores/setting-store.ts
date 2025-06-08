@@ -7,7 +7,7 @@ import {
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface SettingState {
+export interface SettingState {
   theme: "light" | "dark" | "system";
   roadMaterialStyle: {
     [key: string]: {
@@ -16,12 +16,13 @@ interface SettingState {
   };
   roadConditionStyle: {
     [key: string]: {
-      icon: LucideIcon;
       color: string;
+      icon: LucideIcon;
     };
   };
   roadTypeStyle: {
     [key: string]: {
+      color: string;
       pattern: "solid" | "dashed" | "dotted" | "dashed-dotted";
       weight: number;
     };
@@ -35,12 +36,13 @@ interface SettingState {
   }) => void;
   setRoadConditionStyle: (condition: {
     [key: string]: {
-      icon: LucideIcon;
       color: string;
+      icon: LucideIcon;
     };
   }) => void;
   setRoadTypeStyle: (type: {
     [key: string]: {
+      color: string;
       pattern: "solid" | "dashed" | "dotted" | "dashed-dotted";
       weight: number;
     };
@@ -68,15 +70,15 @@ const DEFAULT_SETTINGS: Omit<
   },
 
   roadConditionStyle: {
-    "1": { icon: MapPinCheckInside, color: "green" },
-    "2": { icon: MapPinMinusInside, color: "orange" },
-    "3": { icon: MapPinXInside, color: "red" },
+    "1": { color: "#00FF00", icon: MapPinCheckInside },
+    "2": { color: "#FFFF00", icon: MapPinMinusInside },
+    "3": { color: "#FF0000", icon: MapPinXInside },
   },
 
   roadTypeStyle: {
-    "1": { pattern: "dotted", weight: 4 },
-    "2": { pattern: "dashed", weight: 4 },
-    "3": { pattern: "solid", weight: 4 },
+    "1": { color: "#FF0000", pattern: "dotted", weight: 4 },
+    "2": { color: "#00BFFF", pattern: "dashed", weight: 4 },
+    "3": { color: "#32CD32", pattern: "solid", weight: 4 },
   },
 };
 

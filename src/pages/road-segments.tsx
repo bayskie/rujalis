@@ -71,7 +71,9 @@ export default function RoadSegments() {
     <DefaultLayout>
       <div className="mb-4">
         <h1 className="text-2xl font-semibold">Ruas Jalan</h1>
-        <h3 className="text-muted-foreground">Daftar ruas jalan</h3>
+        <h3 className="text-muted-foreground text-sm">
+          Data lengkap ruas jalan yang terdaftar
+        </h3>
       </div>
 
       <div className="mb-4 flex justify-end gap-2">
