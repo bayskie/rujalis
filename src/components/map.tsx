@@ -22,21 +22,23 @@ import { createIconPattern, createLinePattern } from "@/lib/create-pattern";
 interface MapComponentProps {
   zoom?: number;
   center?: [number, number];
+  drawable?: boolean;
+  activeTileLayer?: (typeof TILE_LAYERS)[0];
   activeRoadSegment?: RoadSegment;
   roadSegments?: RoadSegment[];
   onLengthChange?: (lengthMeters: number) => void;
   onEncodedChange?: (encoded: string) => void;
-  drawable?: boolean;
 }
 
 export const MapComponent = ({
   zoom = 14,
   center = [-8.7947286, 115.17390369964819],
+  drawable = true,
+  activeTileLayer = TILE_LAYERS[0],
   activeRoadSegment,
   roadSegments = [],
   onLengthChange,
   onEncodedChange,
-  drawable = true,
 }: MapComponentProps) => {
   const { roadMaterialStyle, roadConditionStyle, roadTypeStyle } =
     useSettingStore();
@@ -47,14 +49,22 @@ export const MapComponent = ({
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const editablePolylineRef = useRef<L.Polyline | null>(null);
   const segmentLayerRefs = useRef<L.Layer[]>([]);
 
-  const decodePolyline = (encoded: string): [number, number][] =>
-    decode(encoded);
+  // Encode latlngs to polyline
+  const decodePolyline = (encoded: string): [number, number][] => {
+    return decode(encoded);
+  };
 
-  const extractLatLngs = (polyline: L.Polyline): [number, number][] =>
-    (polyline.getLatLngs() as L.LatLng[]).map(({ lat, lng }) => [lat, lng]);
+  // Extract latlngs from polyline
+  const extractLatLngs = (polyline: L.Polyline): [number, number][] => {
+    return (polyline.getLatLngs() as L.LatLng[]).map(({ lat, lng }) => [
+      lat,
+      lng,
+    ]);
+  };
 
   // Update polyline data such as length and encoded string when polyline is updated
   const updatePolylineData = useCallback(
@@ -92,10 +102,9 @@ export const MapComponent = ({
     mapRef.current = mapInstance;
     mapInstance.pm.setLang("id");
 
-    const baseTile = TILE_LAYERS[0];
-    L.tileLayer(baseTile.url, { attribution: baseTile.attribution }).addTo(
-      mapInstance,
-    );
+    L.tileLayer(activeTileLayer.url, {
+      attribution: activeTileLayer.attribution,
+    }).addTo(mapInstance);
     L.control.zoom({ position: "topright" }).addTo(mapInstance);
 
     let viewCenter = center;
@@ -157,9 +166,10 @@ export const MapComponent = ({
       });
     }
   }, [
-    center,
     zoom,
+    center,
     drawable,
+    activeTileLayer,
     activeRoadSegment,
     updatePolylineData,
     bindPolylineEvents,
@@ -169,6 +179,22 @@ export const MapComponent = ({
   useEffect(() => {
     initializeMap();
   }, [initializeMap]);
+
+  // Update the map when active tile layer changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapReady || !activeTileLayer) return;
+
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+    }
+
+    const newTileLayer = L.tileLayer(activeTileLayer.url, {
+      attribution: activeTileLayer.attribution,
+    }).addTo(map);
+
+    tileLayerRef.current = newTileLayer;
+  }, [activeTileLayer, isMapReady]);
 
   // Update the map when road segments change or active road segment changes
   useEffect(() => {

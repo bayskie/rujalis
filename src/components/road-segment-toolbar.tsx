@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router";
 import { TILE_LAYERS } from "@/constants/tile-layers";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchPlaceQuery } from "@/hooks/use-search-place-query";
 
 import {
@@ -25,22 +25,29 @@ interface RoadSegmentToolbarProps {
   showSearch?: boolean;
   showTileLayer?: boolean;
   showAddButton?: boolean;
+  onTileLayerChange?: (layer: (typeof TILE_LAYERS)[0]) => void;
 }
 
 export const RoadSegmentToolbar = ({
   showSearch = true,
   showTileLayer = true,
   showAddButton = true,
+  onTileLayerChange,
 }: RoadSegmentToolbarProps) => {
-  const tileLayers = TILE_LAYERS;
-
   const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTileLayerName, setActiveTileLayerName] = useState(
-    tileLayers[0].name,
-  );
   const { data: searchPlaces, isPending: isSearchPlacesPending } =
     useSearchPlaceQuery(searchQuery);
+
+  const [activeTileLayerName, setActiveTileLayerName] = useState(
+    TILE_LAYERS[0].name,
+  );
+
+  useEffect(() => {
+    onTileLayerChange?.(
+      TILE_LAYERS.find((l) => l.name === activeTileLayerName)!,
+    );
+  }, [activeTileLayerName, onTileLayerChange]);
 
   const onSearch = () => {
     setSearchQuery(inputValue);
@@ -90,7 +97,7 @@ export const RoadSegmentToolbar = ({
                 value={activeTileLayerName}
                 onValueChange={setActiveTileLayerName}
               >
-                {tileLayers.map((layer) => (
+                {TILE_LAYERS.map((layer) => (
                   <DropdownMenuRadioItem key={layer.name} value={layer.name}>
                     {layer.name}
                   </DropdownMenuRadioItem>
