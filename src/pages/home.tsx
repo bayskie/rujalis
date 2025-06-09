@@ -4,6 +4,7 @@ import { formatLength } from "@/lib/format-length";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnalyticChartCard } from "@/components/analytic-chart-card";
 import { Sparkles } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const { data } = useAnalyticQuery();
@@ -20,10 +21,20 @@ export default function Home() {
       <Card className="mb-4 w-full gap-2">
         <CardHeader>
           <CardTitle className="text-muted-foreground text-sm font-normal">
-            Rujal AI <Sparkles className="inline" size={16} />
+            Rujal AI{" "}
+            <Sparkles
+              className="inline animate-pulse text-violet-700"
+              size={16}
+            />
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {!data?.insight && (
+            <div className="space-y-2">
+              <Skeleton className="h-4 max-w-2/3" />
+              <Skeleton className="h-4 max-w-1/3" />
+            </div>
+          )}
           <p>{data?.insight}</p>
         </CardContent>
       </Card>
@@ -38,6 +49,7 @@ export default function Home() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {!data?.roadCount && <Skeleton className="h-9 w-24" />}
               <p className="text-3xl font-semibold">{data?.roadCount}</p>
             </CardContent>
           </Card>
@@ -55,12 +67,21 @@ export default function Home() {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2">
-              <p className="text-3xl font-semibold">
-                {formatLength(Number(data?.roadLengthTotal ?? 0))}
-              </p>
-              <p className="text-3xl font-semibold">
-                {formatLength(Number(data?.roadLengthAvg ?? 0))}
-              </p>
+              {data?.roadLengthTotal !== undefined ? (
+                <p className="text-3xl font-semibold">
+                  {formatLength(Number(data.roadLengthTotal))}
+                </p>
+              ) : (
+                <Skeleton className="h-9 w-24 rounded-md" />
+              )}
+
+              {data?.roadLengthAvg !== undefined ? (
+                <p className="text-3xl font-semibold">
+                  {formatLength(Number(data.roadLengthAvg))}
+                </p>
+              ) : (
+                <Skeleton className="h-9 w-24 rounded-md" />
+              )}
             </CardContent>
           </Card>
         </div>
@@ -77,12 +98,21 @@ export default function Home() {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2">
-              <p className="text-3xl font-semibold">
-                {formatLength(Number(data?.roadWidthTotal ?? 0))}
-              </p>
-              <p className="text-3xl font-semibold">
-                {formatLength(Number(data?.roadWidthAvg ?? 0))}
-              </p>
+              {data?.roadWidthTotal !== undefined ? (
+                <p className="text-3xl font-semibold">
+                  {formatLength(Number(data.roadWidthTotal))}
+                </p>
+              ) : (
+                <Skeleton className="h-9 w-24 rounded-md" />
+              )}
+
+              {data?.roadWidthAvg !== undefined ? (
+                <p className="text-3xl font-semibold">
+                  {formatLength(Number(data.roadWidthAvg))}
+                </p>
+              ) : (
+                <Skeleton className="h-9 w-24 rounded-md" />
+              )}
             </CardContent>
           </Card>
         </div>
