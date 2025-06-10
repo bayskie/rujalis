@@ -1,5 +1,5 @@
+import { ROAD_CONDITION_ICONS } from "@/constants/road-condition-icons";
 import L, { type Pattern } from "leaflet";
-import { type LucideIcon } from "lucide-react";
 import ReactDOMServer from "react-dom/server";
 
 export function createLinePattern(
@@ -46,10 +46,10 @@ export function createLinePattern(
   return patterns;
 }
 
-export function createIconPattern(icon: LucideIcon, color: string): Pattern[] {
+export function createIconPattern(icon: string, color: string): Pattern[] {
   if (!icon) return [];
 
-  const Icon = icon;
+  const Icon = ROAD_CONDITION_ICONS[icon];
 
   const html = ReactDOMServer.renderToString(
     <div className="flex h-[20px] w-[20px] items-center justify-center rounded-full border bg-white">

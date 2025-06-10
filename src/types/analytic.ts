@@ -1,7 +1,7 @@
 export interface Distribution {
+  id: string;
   name: string;
   count: number;
-  fill: string;
 }
 
 export interface Analytic {

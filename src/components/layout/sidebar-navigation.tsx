@@ -25,6 +25,7 @@ import {
   ActivitySquare,
 } from "lucide-react";
 import { Link } from "react-router";
+import SidebarSettingDialog from "@/components/layout/sidebar-setting-dialog";
 
 const baseNavigation = [
   { name: "Beranda", to: "/", icon: House },
@@ -87,6 +88,11 @@ export default function AppSidebarNavigation() {
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
+          </SidebarMenu>
+        </SidebarGroupContent>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarSettingDialog />
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>

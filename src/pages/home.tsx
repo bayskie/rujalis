@@ -124,6 +124,7 @@ export default function Home() {
           title="Kondisi"
           subttitle="Grafik kondisi ruas jalan"
           data={data?.roadConditionDistribution ?? []}
+          type="roadCondition"
         />
 
         {/* Road Segments Type */}
@@ -131,6 +132,7 @@ export default function Home() {
           title="Jenis"
           subttitle="Grafik jenis ruas jalan"
           data={data?.roadTypeDistribution ?? []}
+          type="roadType"
         />
 
         {/* Road Segments Material */}
@@ -138,6 +140,7 @@ export default function Home() {
           title="Material"
           subttitle="Grafik material ruas jalan"
           data={data?.roadMaterialDistribution ?? []}
+          type="roadMaterial"
         />
       </div>
     </DefaultLayout>

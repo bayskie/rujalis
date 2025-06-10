@@ -14,7 +14,7 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         warning:
-          "bg-yellow-400 text-black shadow-xs hover:bg-yellow-400/90 focus-visible:ring-yellow-400/20 dark:focus-visible:ring-yellow-400/40 dark:bg-yellow-400/60",
+          "bg-yellow-400 text-black dark:text-white shadow-xs hover:bg-yellow-400/90 focus-visible:ring-yellow-400/20 dark:focus-visible:ring-yellow-400/40 dark:bg-yellow-400/60",
         success:
           "bg-green-700 text-white shadow-xs hover:bg-green-700/90 focus-visible:ring-green-700/20 dark:focus-visible:ring-green-700/40 dark:bg-green-700/60",
         outline:
@@ -39,16 +39,19 @@ const buttonVariants = cva(
   },
 );
 
+export interface ButtonProps
+  extends React.ComponentProps<"button">,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+}
+
 function Button({
   className,
   variant,
   size,
   asChild = false,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  }) {
+}: ButtonProps) {
   const Comp = asChild ? Slot : "button";
 
   return (
@@ -60,5 +63,4 @@ function Button({
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export { Button, buttonVariants };

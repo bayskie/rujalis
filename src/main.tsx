@@ -14,37 +14,40 @@ import AddRoadSegment from "@/pages/add-road-segment";
 import EditRoadSegment from "@/pages/edit-road-segment";
 import RoadSegments from "@/pages/road-segments";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/">
-              <Route index element={<Home />} />
-              <Route path="map" element={<Map />} />
-              <Route path="road-segments">
-                <Route index element={<RoadSegments />} />
-                <Route path="add" element={<AddRoadSegment />} />
-                <Route path=":segmentId/edit" element={<EditRoadSegment />} />
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/">
+                <Route index element={<Home />} />
+                <Route path="map" element={<Map />} />
+                <Route path="road-segments">
+                  <Route index element={<RoadSegments />} />
+                  <Route path="add" element={<AddRoadSegment />} />
+                  <Route path=":segmentId/edit" element={<EditRoadSegment />} />
+                </Route>
+                <Route path="regions" element={<Regions />} />
+                <Route path="road-materials" element={<Regions />} />
+                <Route path="road-types" element={<Regions />} />
+                <Route path="road-conditions" element={<Regions />} />
               </Route>
-              <Route path="regions" element={<Regions />} />
-              <Route path="road-materials" element={<Regions />} />
-              <Route path="road-types" element={<Regions />} />
-              <Route path="road-conditions" element={<Regions />} />
             </Route>
-          </Route>
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
 
-      <Toaster position="top-right" theme="light" />
+        <Toaster position="top-right" theme="light" />
 
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

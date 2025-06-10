@@ -15,23 +15,35 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface Dist {
-  name: string;
-  count: number;
-  fill: string;
-}
+import type { Distribution } from "@/types/analytic";
+import { useSettingStore } from "@/stores/setting-store";
 
 export function AnalyticChartCard({
   title,
   subttitle,
   data,
+  type,
 }: {
   title: string;
   subttitle: string;
-  data: Dist[];
+  data: Distribution[];
+  type: "roadCondition" | "roadMaterial" | "roadType";
 }) {
-  const config: ChartConfig = data.reduce((acc, d) => {
+  const setting = useSettingStore();
+
+  const styleMap =
+    type === "roadMaterial"
+      ? setting.roadMaterialStyle
+      : type === "roadCondition"
+        ? setting.roadConditionStyle
+        : setting.roadTypeStyle;
+
+  const dataWithColor = data.map((d) => ({
+    ...d,
+    fill: styleMap[d.id]?.color ?? "#999",
+  }));
+
+  const config: ChartConfig = dataWithColor.reduce((acc, d) => {
     acc[d.name] = { label: d.name, color: d.fill };
     return acc;
   }, {} as ChartConfig);
@@ -56,7 +68,7 @@ export function AnalyticChartCard({
           >
             <PieChart>
               <Pie
-                data={data}
+                data={dataWithColor}
                 dataKey="count"
                 nameKey="name"
                 outerRadius={80}

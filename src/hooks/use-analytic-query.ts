@@ -7,7 +7,7 @@ import { useAllRoadSegmentsQuery } from "@/hooks/use-road-segment-query";
 import { useSettingStore } from "@/stores/setting-store";
 import type { Analytic } from "@/types/analytic";
 import { useQuery } from "@tanstack/react-query";
-import { useGenerateContentWithGeminiMutation } from "@/hooks/use-generate-content-with-gemini";
+// import { useGenerateContentWithGeminiMutation } from "@/hooks/use-generate-content-with-gemini";
 import type { RoadSegment } from "@/types/road-segment";
 
 const buildDistribution = <
@@ -18,14 +18,13 @@ const buildDistribution = <
   segments: RoadSegment[],
   key: K,
   getName: (item: T) => string,
-  getFill: (item: T) => string,
 ) => {
   return masterData.map((item) => {
     const count = segments.filter((segment) => segment[key] === item.id).length;
     return {
+      id: item.id,
       name: getName(item),
       count,
-      fill: getFill(item),
     };
   });
 };
@@ -79,8 +78,8 @@ export const useAnalyticQuery = () => {
   const { data: roadConditions } = useMasterRoadConditionsQuery();
   const { data: roadTypes } = useMasterRoadTypesQuery();
   const { data: roadMaterials } = useMasterRoadMaterialsQuery();
-  const { mutateAsync: generateInsight } =
-    useGenerateContentWithGeminiMutation();
+  // const { mutateAsync: generateInsight } =
+  //   useGenerateContentWithGeminiMutation();
   const setting = useSettingStore();
 
   const segments = roadSegments?.ruasjalan ?? [];
@@ -103,7 +102,6 @@ export const useAnalyticQuery = () => {
         segments,
         "kondisi_id",
         (c) => c.kondisi,
-        (c) => setting.roadConditionStyle[c.id]?.color ?? "#000000",
       );
 
       const roadTypeDistribution = buildDistribution(
@@ -111,7 +109,6 @@ export const useAnalyticQuery = () => {
         segments,
         "jenisjalan_id",
         (t) => t.jenisjalan,
-        (t) => setting.roadTypeStyle[t.id]?.color ?? "#000000",
       );
 
       const roadMaterialDistribution = buildDistribution(
@@ -119,7 +116,6 @@ export const useAnalyticQuery = () => {
         segments,
         "eksisting_id",
         (m) => m.eksisting,
-        (m) => setting.roadMaterialStyle[m.id]?.color ?? "#000000",
       );
 
       const prompt = buildPrompt(
@@ -130,12 +126,12 @@ export const useAnalyticQuery = () => {
       );
 
       let insight = "";
-      try {
-        const response = await generateInsight(prompt);
-        insight = response.candidates?.[0].content?.parts?.[0].text ?? "";
-      } catch {
-        insight = "Gagal menghasilkan ringkasan analisis.";
-      }
+      // try {
+      //   const response = await generateInsight(prompt);
+      //   insight = response.candidates?.[0].content?.parts?.[0].text ?? "";
+      // } catch {
+      //   insight = "Gagal menghasilkan ringkasan analisis.";
+      // }
 
       return {
         ...stats,
