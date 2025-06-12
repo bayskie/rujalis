@@ -55,7 +55,7 @@ export const RoadSegmentToolbar = ({
 
   return (
     <div className="absolute top-2 left-2 z-30 w-72 overflow-auto p-1">
-      <div className="flex flex-col gap-2 rounded-lg border bg-white p-2 shadow-md">
+      <div className="bg-background flex flex-col gap-2 rounded-lg border p-2 shadow-md">
         {/* Search Place */}
         {showSearch && (
           <div className="flex gap-2">
@@ -122,7 +122,10 @@ export const RoadSegmentToolbar = ({
       </div>
 
       {showAddButton && (
-        <Button asChild className="mt-2 w-full">
+        <Button
+          asChild
+          className="bg-background hover:bg-background/90 text-foreground mt-2 w-full border shadow"
+        >
           <Link to="/road-segments/add">
             <Plus /> Tambah Ruas Jalan
           </Link>
