@@ -105,7 +105,6 @@ export const MapComponent = ({
     L.tileLayer(activeTileLayer.url, {
       attribution: activeTileLayer.attribution,
     }).addTo(mapInstance);
-    L.control.zoom({ position: "topright" }).addTo(mapInstance);
 
     let viewCenter = center;
 

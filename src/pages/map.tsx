@@ -5,6 +5,7 @@ import { RoadSegmentToolbar } from "@/components/road-segment-toolbar";
 import { useFilterMapper } from "@/hooks/use-filter-mapper";
 import { useState } from "react";
 import { TILE_LAYERS } from "@/constants/tile-layers";
+import { RoadSegmentLegend } from "@/components/road-segment-legend";
 
 export default function Map() {
   const filter = useFilterMapper();
@@ -20,6 +21,7 @@ export default function Map() {
           roadSegments={data?.ruasjalan}
           activeTileLayer={activeTileLayer}
         />
+        <RoadSegmentLegend />
       </div>
     </MapLayout>
   );
