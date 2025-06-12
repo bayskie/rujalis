@@ -1,8 +1,16 @@
 import { useAuthStore } from "@/stores/auth-store";
-import { Navigate, Outlet } from "react-router";
+import { useEffect } from "react";
+import { Navigate, Outlet, useNavigate } from "react-router";
 
 export default function ProtectedRoute() {
-  const authStore = useAuthStore();
+  const { token, needsReauth } = useAuthStore();
+  const navigate = useNavigate();
 
-  return authStore.token ? <Outlet /> : <Navigate to="/login" />;
+  useEffect(() => {
+    if (needsReauth) {
+      navigate("/login");
+    }
+  }, [needsReauth, navigate]);
+
+  return token ? <Outlet /> : <Navigate to="/login" />;
 }
