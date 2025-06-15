@@ -31,8 +31,6 @@ export function PlaceDialog({
 
   const matched = place && regions ? matchRegions(regions, place) : null;
 
-  console.log({ matched });
-
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent>
