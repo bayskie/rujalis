@@ -63,7 +63,7 @@ function LegendSection<T extends LegendItemBase>({
 }
 
 export function RoadSegmentLegend() {
-  const [isLegendOpen, setIsLegendOpen] = useState(true);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
   const { roadConditionStyle, roadTypeStyle, roadMaterialStyle } =
     useSettingStore();
 

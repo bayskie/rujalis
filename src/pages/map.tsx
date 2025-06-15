@@ -11,13 +11,24 @@ export default function Map() {
   const filter = useFilterMapper();
   const { data } = useAllRoadSegmentsQuery(filter);
   const [activeTileLayer, setActiveTileLayer] = useState(TILE_LAYERS[0]);
+  const [center, setCenter] = useState<[number, number]>([
+    -8.7947286, 115.1739037,
+  ]);
 
   return (
     <MapLayout>
       <div className="relative h-full">
-        <RoadSegmentToolbar onTileLayerChange={setActiveTileLayer} />
+        <RoadSegmentToolbar
+          onPlaceChange={(place) => {
+            if (place) {
+              setCenter([parseFloat(place.lat), parseFloat(place.lon)]);
+            }
+          }}
+          onTileLayerChange={setActiveTileLayer}
+        />
         <MapComponent
           drawable={false}
+          center={center}
           roadSegments={data?.ruasjalan}
           activeTileLayer={activeTileLayer}
         />

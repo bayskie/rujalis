@@ -20,11 +20,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { RoadSegmentFilterForm } from "@/components/road-segment-filter-form";
+import type { NominatimPlace } from "@/types/nominatim";
 
 interface RoadSegmentToolbarProps {
   showSearch?: boolean;
   showTileLayer?: boolean;
   showAddButton?: boolean;
+  onPlaceChange?: (place: NominatimPlace | null) => void;
   onTileLayerChange?: (layer: (typeof TILE_LAYERS)[0]) => void;
 }
 
@@ -32,25 +34,43 @@ export const RoadSegmentToolbar = ({
   showSearch = true,
   showTileLayer = true,
   showAddButton = true,
+  onPlaceChange,
   onTileLayerChange,
 }: RoadSegmentToolbarProps) => {
-  const [inputValue, setInputValue] = useState("");
+  const [searchInputValue, setSearchInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: searchPlaces, isPending: isSearchPlacesPending } =
+  const { data: searchedPlaces, isPending: isSearchedPlacesPending } =
     useSearchPlaceQuery(searchQuery);
+  const [lastPlaceId, setLastPlaceId] = useState<number | null>(null);
 
   const [activeTileLayerName, setActiveTileLayerName] = useState(
     TILE_LAYERS[0].name,
   );
 
   useEffect(() => {
-    onTileLayerChange?.(
-      TILE_LAYERS.find((l) => l.name === activeTileLayerName)!,
+    const selectedLayer = TILE_LAYERS.find(
+      (l) => l.name === activeTileLayerName,
     );
+
+    if (selectedLayer) {
+      onTileLayerChange?.(selectedLayer);
+    }
   }, [activeTileLayerName, onTileLayerChange]);
 
-  const onSearch = () => {
-    setSearchQuery(inputValue);
+  useEffect(() => {
+    if (searchQuery && searchedPlaces && searchedPlaces.length > 0) {
+      const firstPlace = searchedPlaces[0];
+      if (firstPlace.place_id !== lastPlaceId) {
+        setLastPlaceId(firstPlace.place_id);
+        onPlaceChange?.(firstPlace);
+      }
+    }
+  }, [searchedPlaces, searchQuery, onPlaceChange, lastPlaceId]);
+
+  const handleSearch = () => {
+    if (searchInputValue) {
+      setSearchQuery(searchInputValue);
+    }
   };
 
   return (
@@ -60,19 +80,19 @@ export const RoadSegmentToolbar = ({
         {showSearch && (
           <div className="flex gap-2">
             <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyUp={(e) => e.key === "Enter" && onSearch()}
+              value={searchInputValue}
+              onChange={(e) => setSearchInputValue(e.target.value)}
+              onKeyUp={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Cari Tempat"
-              disabled={isSearchPlacesPending}
+              disabled={isSearchedPlacesPending}
             />
 
             <Button
-              onClick={onSearch}
+              onClick={handleSearch}
               size="icon"
-              disabled={isSearchPlacesPending || !inputValue}
+              disabled={isSearchedPlacesPending || !searchInputValue}
             >
-              {isSearchPlacesPending ? (
+              {isSearchedPlacesPending ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <Search />

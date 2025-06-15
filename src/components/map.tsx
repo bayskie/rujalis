@@ -18,6 +18,7 @@ import type { RoadSegment } from "@/types/road-segment";
 import { RoadSegmentDialog } from "@/components/road-segment-dialog";
 import { useSettingStore } from "@/stores/setting-store";
 import { createIconPattern, createLinePattern } from "@/lib/create-pattern";
+import { PlaceDialog } from "@/components/place-dialog";
 
 interface MapComponentProps {
   zoom?: number;
@@ -45,7 +46,13 @@ export const MapComponent = ({
 
   const [isMapReady, setIsMapReady] = useState(false);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string>("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPlaceDialogOpen, setIsPlaceDialogOpen] = useState(false);
+  const [selectedLatLng, setSelectedLatLng] = useState<[number, number]>([
+    0, 0,
+  ]);
+  const [isRoadSegmentDialogOpen, setIsRoadSegmentDialogOpen] = useState(false);
+
+  const firstSegmentPath = roadSegments[0]?.paths;
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -94,57 +101,40 @@ export const MapComponent = ({
     [updatePolylineData, onLengthChange, onEncodedChange],
   );
 
-  // Initialize the map
-  const initializeMap = useCallback(() => {
+  // Initialize the map when the component mounts
+  useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
     const mapInstance = L.map(mapContainerRef.current, { zoomControl: false });
     mapRef.current = mapInstance;
     mapInstance.pm.setLang("id");
 
-    L.tileLayer(activeTileLayer.url, {
-      attribution: activeTileLayer.attribution,
+    const tileLayer = activeTileLayer;
+
+    L.tileLayer(tileLayer.url, {
+      attribution: tileLayer.attribution,
     }).addTo(mapInstance);
 
-    let viewCenter = center;
-
-    if (activeRoadSegment) {
-      const decodedPath = decodePolyline(activeRoadSegment.paths);
-      if (decodedPath.length) {
-        const [lng, lat] = turfCenter(lineString(decodedPath)).geometry
-          .coordinates;
-        viewCenter = [lng, lat];
-
-        const polyline = L.polyline(decodedPath, { color: "blue" }).addTo(
-          mapInstance,
-        );
-        editablePolylineRef.current = polyline;
-
-        updatePolylineData(polyline);
-        bindPolylineEvents(polyline);
-      }
-    }
-
-    mapInstance.setView(viewCenter, zoom);
+    mapInstance.setView(center, zoom);
     setIsMapReady(true);
 
-    mapInstance.pm.addControls({
-      position: "topright",
-      drawPolyline: drawable,
-      editMode: drawable,
-      removalMode: drawable,
-      drawMarker: false,
-      drawPolygon: false,
-      drawCircle: false,
-      drawRectangle: false,
-      drawText: false,
-      drawCircleMarker: false,
-      dragMode: false,
-      cutPolygon: false,
-      rotateMode: false,
-    });
-
     if (drawable) {
+      mapInstance.pm.addControls({
+        position: "topright",
+        drawPolyline: drawable,
+        editMode: drawable,
+        removalMode: drawable,
+        drawMarker: false,
+        drawPolygon: false,
+        drawCircle: false,
+        drawRectangle: false,
+        drawText: false,
+        drawCircleMarker: false,
+        dragMode: false,
+        cutPolygon: false,
+        rotateMode: false,
+      });
+
       mapInstance.on("pm:drawstart", ({ workingLayer }) => {
         workingLayer.on("pm:vertexadded", ({ workingLayer: layer }) => {
           if (editablePolylineRef.current) {
@@ -163,21 +153,49 @@ export const MapComponent = ({
         updatePolylineData(newPolyline);
         bindPolylineEvents(newPolyline);
       });
+    } else {
+      mapInstance.on("click", (e) => {
+        const { lat, lng } = e.latlng;
+        setSelectedLatLng([lat, lng]);
+        setIsPlaceDialogOpen(true);
+      });
     }
-  }, [
-    zoom,
-    center,
-    drawable,
-    activeTileLayer,
-    activeRoadSegment,
-    updatePolylineData,
-    bindPolylineEvents,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Initialize the map when the component mounts
+  // Update the map center when center changes
   useEffect(() => {
-    initializeMap();
-  }, [initializeMap]);
+    const map = mapRef.current;
+    if (!map || !isMapReady || !center) return;
+
+    map.setView(center, zoom);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMapReady, zoom, JSON.stringify(center)]);
+
+  // Update the map center when road segment changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapReady) return;
+
+    if (activeRoadSegment) {
+      const decodedPath = decodePolyline(activeRoadSegment.paths);
+      if (decodedPath.length) {
+        const [lat, lng] = turfCenter(lineString(decodedPath)).geometry
+          .coordinates;
+        map.setView([lat, lng], zoom);
+      }
+      return;
+    }
+
+    if (firstSegmentPath) {
+      const decodedPath = decodePolyline(firstSegmentPath);
+      if (decodedPath.length > 0) {
+        const [lat, lng] = turfCenter(lineString(decodedPath)).geometry
+          .coordinates;
+        map.setView([lat, lng], zoom);
+      }
+    }
+  }, [isMapReady, zoom, firstSegmentPath, activeRoadSegment]);
 
   // Update the map when active tile layer changes
   useEffect(() => {
@@ -254,7 +272,7 @@ export const MapComponent = ({
 
       polyline.on("click", () => {
         setSelectedSegmentId(segment.id);
-        setIsDialogOpen(true);
+        setIsRoadSegmentDialogOpen(true);
       });
     });
   }, [
@@ -280,9 +298,14 @@ export const MapComponent = ({
         ref={mapContainerRef}
         className="z-10 h-full w-full rounded border"
       />
+      <PlaceDialog
+        isDialogOpen={isPlaceDialogOpen}
+        setIsDialogOpen={setIsPlaceDialogOpen}
+        latLng={selectedLatLng}
+      />
       <RoadSegmentDialog
-        isDialogOpen={isDialogOpen}
-        setIsDialogOpen={setIsDialogOpen}
+        isDialogOpen={isRoadSegmentDialogOpen}
+        setIsDialogOpen={setIsRoadSegmentDialogOpen}
         roadSegmentId={selectedSegmentId}
       />
     </div>

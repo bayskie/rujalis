@@ -16,6 +16,23 @@ export const searchPlaceFn = async (
   return res.data;
 };
 
+export const searchReversePlaceFn = async (
+  lat: number,
+  lon: number,
+): Promise<NominatimPlace> => {
+  const res = await nominatimClient.get("/reverse", {
+    params: {
+      format: "json",
+      addressdetails: 1,
+      limit: 10,
+      lat,
+      lon,
+    },
+  });
+
+  return res.data;
+};
+
 export const structuredSearchPlaceFn = async ({
   country,
   state,
