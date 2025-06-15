@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Filter, Loader2, Plus, Search } from "lucide-react";
+import { Filter, Plus, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
@@ -39,8 +39,7 @@ export const RoadSegmentToolbar = ({
 }: RoadSegmentToolbarProps) => {
   const [searchInputValue, setSearchInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: searchedPlaces, isPending: isSearchedPlacesPending } =
-    useSearchPlaceQuery(searchQuery);
+  const { data: searchedPlaces } = useSearchPlaceQuery(searchQuery);
   const [lastPlaceId, setLastPlaceId] = useState<number | null>(null);
 
   const [activeTileLayerName, setActiveTileLayerName] = useState(
@@ -84,19 +83,14 @@ export const RoadSegmentToolbar = ({
               onChange={(e) => setSearchInputValue(e.target.value)}
               onKeyUp={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Cari Tempat"
-              disabled={isSearchedPlacesPending}
             />
 
             <Button
               onClick={handleSearch}
               size="icon"
-              disabled={isSearchedPlacesPending || !searchInputValue}
+              disabled={!searchInputValue}
             >
-              {isSearchedPlacesPending ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Search />
-              )}
+              <Search />
             </Button>
           </div>
         )}

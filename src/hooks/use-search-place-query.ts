@@ -10,6 +10,7 @@ export const useSearchPlaceQuery = (query: string) => {
   return useQuery<NominatimPlace[]>({
     queryKey: ["search-place", query],
     queryFn: () => searchPlaceFn(query),
+    enabled: !!query,
     staleTime: 1000 * 60 * 10,
     retry: false,
   });
@@ -19,6 +20,7 @@ export const useSearchReversePlaceQuery = (lat: number, lng: number) => {
   return useQuery<NominatimPlace>({
     queryKey: ["search-reverse-place", lat, lng],
     queryFn: () => searchReversePlaceFn(lat, lng),
+    enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 10,
     retry: false,
   });
