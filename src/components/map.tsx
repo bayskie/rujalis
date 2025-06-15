@@ -279,7 +279,8 @@ export const MapComponent = ({
         },
       );
 
-      polyline.on("click", () => {
+      polyline.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
         setSelectedSegmentId(segment.id);
         setIsRoadSegmentDialogOpen(true);
       });
