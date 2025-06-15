@@ -1,6 +1,7 @@
 import {
   getAllProvincesFn,
   getAllRegenciesByProvinceIdFn,
+  getAllRegionsFn,
   getAllSubdistrictsByRegencyIdFn,
   getAllVillagesBySubdistrictIdFn,
   getProvinceByProvinceIdFn,
@@ -57,6 +58,14 @@ export const useVillageByIdQuery = (villageId: string) => {
     queryKey: ["village", villageId],
     queryFn: () => getVillageByIdFn(villageId),
     enabled: !!villageId,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+export const useAllRegionsQuery = () => {
+  return useQuery({
+    queryKey: ["all-regions"],
+    queryFn: getAllRegionsFn,
     staleTime: 1000 * 60 * 10,
   });
 };

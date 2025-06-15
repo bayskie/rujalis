@@ -2,6 +2,7 @@ import { authClient } from "@/lib/http-client";
 import type {
   GetAllProvincesResponse,
   GetAllRegenciesByProvinceIdResponse,
+  GetAllRegionsResponse,
   GetAllSubdistrictsByRegencyIdResponse,
   GetAllVillagesBySubdistrictIdResponse,
   GetProvinceByIdResponse,
@@ -35,3 +36,6 @@ export const getVillageByIdFn = (
   villageId: string,
 ): Promise<GetVillageByIdResponse> =>
   authClient.get(`/kecamatanbydesaid/${villageId}`).then((res) => res.data);
+
+export const getAllRegionsFn = (): Promise<GetAllRegionsResponse> =>
+  authClient.get(`/mregion`).then((res) => res.data);

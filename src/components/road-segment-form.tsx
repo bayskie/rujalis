@@ -40,6 +40,7 @@ import {
 } from "@/hooks/use-road-segment-mutation";
 import { Loader2, Save } from "lucide-react";
 import { useGenerateRoadSegmentCode } from "@/hooks/use-generate-road-segment-code";
+import { useSearchParams } from "react-router";
 
 const useSelectOptions = <T,>(
   data: T[] | undefined,
@@ -118,15 +119,21 @@ export const RoadSegmentForm = ({
   formType = "add",
   roadSegmentId,
 }: RoadSegmentFormProps) => {
+  const [searchParams] = useSearchParams();
+
   const [selectedProvinceId, setSelectedProvinceId] = useState<string>(
-    values?.provinsi_id?.toString() || "",
+    values?.provinsi_id?.toString() || searchParams.get("province_id") || "",
   );
   const [selectedRegencyId, setSelectedRegencyId] = useState<string>(
-    values?.kabupaten_id?.toString() || "",
+    values?.kabupaten_id?.toString() || searchParams.get("regency_id") || "",
   );
   const [selectedSubdistrictId, setSelectedSubdistrictId] = useState<string>(
-    values?.kecamatan_id?.toString() || "",
+    values?.kecamatan_id?.toString() ||
+      searchParams.get("subdistrict_id") ||
+      "",
   );
+  const selectedVillageId =
+    values?.desa_id?.toString() || searchParams.get("village_id") || "";
 
   const allProvinces = useAllProvincesQuery();
   const allRegencies = useAllRegenciesByProvinceIdQuery(selectedProvinceId);
@@ -204,13 +211,15 @@ export const RoadSegmentForm = ({
           values.keterangan || "Keterangan " + generatedRoadSegmentCode,
         panjang: values.panjang ?? 0,
         lebar: values.lebar ?? 0,
-        desa_id: values.desa_id?.toString() || "",
+        desa_id: selectedVillageId,
         eksisting_id: values.eksisting_id?.toString() || "",
         kondisi_id: values.kondisi_id?.toString() || "",
         jenisjalan_id: values.jenisjalan_id?.toString() || "",
       });
       setHasInitialized(true);
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, values, generatedRoadSegmentCode, hasInitialized]);
 
   const { setValue } = form;
