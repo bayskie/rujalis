@@ -98,25 +98,37 @@ const ThemeSetting: React.FC<ThemeSettingProps> = ({
   </div>
 );
 
-// const ColorSchemeSetting: React.FC<{ colorScheme: string }> = ({
-//   colorScheme,
-// }) => (
-//   <div>
-//     <h3 className="text-muted-foreground mb-2 text-sm">Skema Warna</h3>
-//     <ToggleGroup
-//       type="single"
-//       variant="outline"
-//       value={}
-//       onValueChange={(val) => {
-//         if (val) setRoadConditionIcon(condition.id, val);
-//       }}
-//     >
-//       <ToggleGroupItem value={"roadMaterial"}>Material</ToggleGroupItem>
-//       <ToggleGroupItem value={""}>Tipe Jalan</ToggleGroupItem>
-//       <ToggleGroupItem value={"roadType"}>Tipe Jalan</ToggleGroupItem>
-//     </ToggleGroup>
-//   </div>
-// );
+interface ColorSchemeSettingProps {
+  currentScheme: string;
+  setScheme: (scheme: "material" | "condition" | "type") => void;
+}
+
+const ColorSchemeSetting: React.FC<ColorSchemeSettingProps> = ({
+  currentScheme,
+  setScheme,
+}) => (
+  <div>
+    <h3 className="text-muted-foreground mb-2 text-sm">Skema Warna</h3>
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      value={currentScheme}
+      onValueChange={(val) => {
+        if (val) setScheme(val as "material" | "condition" | "type");
+      }}
+    >
+      <ToggleGroupItem value={"material"} className="px-4">
+        Material
+      </ToggleGroupItem>
+      <ToggleGroupItem value={"condition"} className="px-4">
+        Kondisi
+      </ToggleGroupItem>
+      <ToggleGroupItem value={"type"} className="px-4">
+        Tipe
+      </ToggleGroupItem>
+    </ToggleGroup>
+  </div>
+);
 
 interface RoadMaterialColorSettingProps {
   roadMaterials: { id: string; eksisting: string }[];
@@ -344,10 +356,12 @@ const RoadTypeWeightSetting: React.FC<RoadTypeWeightSettingProps> = ({
 export default function SidebarSettingDialog() {
   const {
     theme,
+    scheme,
     roadMaterialStyle,
     roadConditionStyle,
     roadTypeStyle,
     setTheme,
+    setScheme,
     setRoadMaterialColor,
     setRoadConditionColor,
     setRoadConditionIcon,
@@ -378,6 +392,8 @@ export default function SidebarSettingDialog() {
         <ScrollArea className="h-[400px]">
           <div className="space-y-8 p-2">
             <ThemeSetting currentTheme={theme} setTheme={setTheme} />
+
+            <ColorSchemeSetting currentScheme={scheme} setScheme={setScheme} />
 
             {roadMaterials?.eksisting && (
               <RoadMaterialColorSetting

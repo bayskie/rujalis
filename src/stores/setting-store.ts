@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 
 export interface SettingState {
   theme: "light" | "dark" | "system";
+  scheme: "material" | "condition" | "type";
   roadMaterialStyle: {
     [key: string]: {
       color: string;
@@ -24,6 +25,7 @@ export interface SettingState {
   };
 
   setTheme: (theme: "light" | "dark" | "system") => void;
+  setScheme: (scheme: "material" | "condition" | "type") => void;
   setRoadMaterialColor: (id: string, color: string) => void;
   setRoadConditionColor: (id: string, color: string) => void;
   setRoadConditionIcon: (id: string, icon: string) => void;
@@ -41,6 +43,7 @@ export const useSettingStore = create<SettingState>()(
       ...DEFAULT_SETTINGS,
 
       setTheme: (theme) => set({ theme }),
+      setScheme: (scheme) => set({ scheme }),
 
       setRoadMaterialColor: (id, color) =>
         set((state) => ({

@@ -3,6 +3,7 @@ import type { SettingState } from "@/stores/setting-store";
 export const DEFAULT_SETTINGS: Omit<
   SettingState,
   | "setTheme"
+  | "setScheme"
   | "setRoadMaterialColor"
   | "setRoadConditionColor"
   | "setRoadConditionIcon"
@@ -11,6 +12,7 @@ export const DEFAULT_SETTINGS: Omit<
   | "setRoadTypeWeight"
 > = {
   theme: "system",
+  scheme: "condition",
   roadMaterialStyle: {
     "1": { color: "#FF0000" },
     "2": { color: "#00BFFF" },

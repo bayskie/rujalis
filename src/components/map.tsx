@@ -41,7 +41,7 @@ export const MapComponent = ({
   onLengthChange,
   onEncodedChange,
 }: MapComponentProps) => {
-  const { roadMaterialStyle, roadConditionStyle, roadTypeStyle } =
+  const { scheme, roadMaterialStyle, roadConditionStyle, roadTypeStyle } =
     useSettingStore();
 
   const [isMapReady, setIsMapReady] = useState(false);
@@ -230,7 +230,16 @@ export const MapComponent = ({
 
       const path = decodePolyline(segment.paths);
 
-      const { icon, color } = roadConditionStyle[segment.kondisi_id];
+      let color = "blue";
+      if (scheme === "material") {
+        color = roadMaterialStyle[segment.eksisting_id].color;
+      } else if (scheme === "condition") {
+        color = roadConditionStyle[segment.kondisi_id].color;
+      } else if (scheme === "type") {
+        color = roadTypeStyle[segment.jenisjalan_id].color;
+      }
+
+      const { icon } = roadConditionStyle[segment.kondisi_id];
       const { pattern, weight } = roadTypeStyle[segment.jenisjalan_id];
 
       const polyline = L.polyline(path, {
@@ -278,6 +287,7 @@ export const MapComponent = ({
   }, [
     roadSegments,
     activeRoadSegment,
+    scheme,
     isMapReady,
     roadMaterialStyle,
     roadConditionStyle,
