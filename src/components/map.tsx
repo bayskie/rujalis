@@ -115,7 +115,26 @@ export const MapComponent = ({
       attribution: tileLayer.attribution,
     }).addTo(mapInstance);
 
-    mapInstance.setView(center, zoom);
+    let viewCenter = center;
+
+    if (activeRoadSegment) {
+      const decodedPath = decodePolyline(activeRoadSegment.paths);
+      if (decodedPath.length) {
+        const [lng, lat] = turfCenter(lineString(decodedPath)).geometry
+          .coordinates;
+        viewCenter = [lng, lat];
+
+        const polyline = L.polyline(decodedPath, { color: "blue" }).addTo(
+          mapInstance,
+        );
+        editablePolylineRef.current = polyline;
+
+        updatePolylineData(polyline);
+        bindPolylineEvents(polyline);
+      }
+    }
+
+    mapInstance.setView(viewCenter, zoom);
     setIsMapReady(true);
 
     if (drawable) {
@@ -222,11 +241,9 @@ export const MapComponent = ({
     segmentLayerRefs.current = [];
 
     roadSegments.forEach((segment) => {
-      if (
-        !segment.paths ||
-        (activeRoadSegment && segment.id === activeRoadSegment.id)
-      )
+      if (!segment.paths) {
         return;
+      }
 
       const path = decodePolyline(segment.paths);
 
