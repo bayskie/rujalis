@@ -80,6 +80,7 @@ export default function AppSidebarUserDropdown() {
                 <span>Keluar</span>
               </>
             }
+            children={<p>Apakah anda yakin ingin keluar?</p>}
             footer={
               <div className="flex flex-row gap-2">
                 <Button variant="ghost">Batal</Button>
