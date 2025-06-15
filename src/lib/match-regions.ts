@@ -52,5 +52,7 @@ export const matchRegions = (
     regency_id: kabupaten?.id || null,
     subdistrict_id: kecamatan?.id || null,
     village_id: desa?.id || null,
+    lat: place.lat,
+    lng: place.lon,
   };
 };
