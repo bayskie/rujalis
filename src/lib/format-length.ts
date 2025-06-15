@@ -1,6 +1,8 @@
 export const formatLength = (value: number): string => {
   if (value < 1000) {
-    return `${value} m`;
+    return `${new Intl.NumberFormat("id-ID", {
+      maximumFractionDigits: 2,
+    }).format(value)} m`;
   }
 
   const km = value / 1000;
