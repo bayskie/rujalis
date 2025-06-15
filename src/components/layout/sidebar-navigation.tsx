@@ -25,7 +25,7 @@ import {
   ActivitySquare,
 } from "lucide-react";
 import { Link } from "react-router";
-import SidebarSettingDialog from "@/components/layout/sidebar-setting-dialog-copy";
+import SidebarSettingDialog from "@/components/layout/sidebar-setting-dialog";
 
 const baseNavigation = [
   { name: "Beranda", to: "/", icon: House },
